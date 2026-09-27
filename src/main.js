@@ -46,18 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pageFlip.loadFromHTML(document.querySelectorAll('#flipbook .page'));
 
-  // Desvanecimiento suave de la píldora de guía de lectura
-  const hintEl = document.getElementById('reading-hint');
-  const dismissHint = () => {
-    if (hintEl && !hintEl.classList.contains('fade-out')) {
-      hintEl.classList.add('fade-out');
-      setTimeout(() => {
-        if (hintEl) hintEl.style.display = 'none';
-      }, 700);
-    }
-  };
-  setTimeout(dismissHint, 5500);
-
   // Gestos táctiles nativos de deslizamiento (Swipe) y Toque (Tap) para iPhone y Android
   let touchStartX = 0;
   let touchStartY = 0;
@@ -81,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 1. Gesto de Deslizamiento (Swipe horizontal claro)
       if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.25) {
-        dismissHint();
         if (diffX < 0) {
           pageFlip.flipNext();
         } else {
@@ -98,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        dismissHint();
         const rect = bookEl.getBoundingClientRect();
         const tapX = touchEndX - rect.left;
         if (tapX > rect.width * 0.45) {
@@ -118,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rect = bookEl.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    dismissHint();
     if (clickX > rect.width * 0.55) {
       pageFlip.flipNext();
     } else if (clickX < rect.width * 0.45) {
@@ -138,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4. Modal de Capítulos
   const chaptersModal = new ChaptersModal((targetPage) => {
-    dismissHint();
     pageFlip.flip(targetPage);
   });
 
@@ -176,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 6. Evento de pasar página
   pageFlip.on('flip', (e) => {
-    dismissHint();
     const pageIndex = e.data;
     audioController.playFlipSound();
     updateNavigation(pageIndex, totalPages);
