@@ -23,6 +23,20 @@ export class TelemetryService {
 
   async init() {
     try {
+      // 0. Comprobar si este dispositivo es el del Creador/Autor para excluirlo al 100%
+      const isCreatorDevice = localStorage.getItem('libro_lau_ignore_device') === 'true' ||
+                              sessionStorage.getItem('libro_lau_auth_unlocked') === 'true' ||
+                              window.location.search.includes('admin') ||
+                              window.location.search.includes('creador') ||
+                              window.location.search.includes('dev');
+
+      if (isCreatorDevice) {
+        this.isIgnored = true;
+        localStorage.setItem('libro_lau_ignore_device', 'true');
+        console.log('🛡️ [Telemetry] Modo Creador Activo: Tu dispositivo está excluido y no registrará datos en Firebase.');
+        return;
+      }
+
       const now = Date.now();
       const storage = analyticsConfig.storageKeys;
 
@@ -554,7 +568,7 @@ export class TelemetryService {
   }
 
   syncSession(isBeacon = false) {
-    if (!this.session) return;
+    if (!this.session || this.isIgnored) return;
 
     try {
       const storage = analyticsConfig.storageKeys;

@@ -1362,3 +1362,121 @@ body.apple-glass-theme {
     align-items: flex-start;
   }
 }
+
+/* ==========================================================================
+   ESTILOS DE MODO CREADOR & DETECTOR DE VISITANTES
+   ========================================================================== */
+
+.creator-status-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(48, 209, 88, 0.12);
+  border: 1px solid rgba(48, 209, 88, 0.35);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #a7f3d0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.creator-status-chip:hover {
+  background: rgba(48, 209, 88, 0.22);
+}
+
+.creator-status-chip .chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--apple-green);
+  box-shadow: 0 0 8px var(--apple-green);
+}
+
+.visitor-detector-banner {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.visitor-detector-banner.multiple-visitors {
+  background: linear-gradient(135deg, rgba(255, 159, 10, 0.14), rgba(22, 26, 38, 0.7));
+  border-color: rgba(255, 159, 10, 0.35);
+}
+
+.visitor-detector-banner.single-visitor {
+  background: linear-gradient(135deg, rgba(48, 209, 88, 0.12), rgba(22, 26, 38, 0.7));
+  border-color: rgba(48, 209, 88, 0.3);
+}
+
+.vd-leading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.vd-icon {
+  font-size: 1.6rem;
+}
+
+.vd-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.vd-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.vd-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vd-pill-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vd-pill-btn.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.delete-session-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 55, 95, 0.2);
+  color: #fda4af;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.delete-session-btn:hover {
+  background: rgba(255, 55, 95, 0.2);
+  border-color: var(--apple-rose);
+  color: #fff;
+}

@@ -85,6 +85,11 @@
       </div>
 
       <div class="nav-actions">
+        <div class="creator-status-chip" id="chip-creator-mode" title="Tu equipo está 100% excluido de las estadísticas">
+          <span class="chip-dot"></span>
+          <span>Mi equipo excluido</span>
+        </div>
+
         <button class="glass-icon-btn" id="btn-refresh" title="Actualizar datos">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -121,6 +126,20 @@
       </div>
       <div class="activity-trailing" id="live-trailing">
         <span class="activity-time-pill" id="live-time-pill">En espera</span>
+      </div>
+    </div>
+
+    <!-- Detección de Visitantes (¿Solo Lau o alguien más?) -->
+    <div class="apple-glass-card visitor-detector-banner" id="visitor-detector-box">
+      <div class="vd-leading">
+        <span class="vd-icon" id="vd-icon">👤</span>
+        <div class="vd-info">
+          <h3 class="vd-title" id="vd-title">Análisis de Visitantes</h3>
+          <p class="vd-desc" id="vd-desc">Verificando si solo Lau ha leído el libro o si hubo más dispositivos.</p>
+        </div>
+      </div>
+      <div class="vd-actions-group" id="vd-filter-buttons">
+        <!-- Renderizado dinámico de filtros por persona -->
       </div>
     </div>
 
@@ -418,6 +437,14 @@
           <label class="field-label">PIN de Seguridad (4 dígitos):</label>
           <input class="glass-input" id="input-custom-pin" type="text" maxlength="4" placeholder="2709">
           <span class="field-help">Código numérico para desbloquear este panel.</span>
+        </div>
+
+        <div class="field-group" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--glass-border-subtle);">
+          <label class="field-label" style="color: var(--apple-rose);">Limpieza de Datos de Prueba:</label>
+          <button class="glass-btn" id="btn-purge-all" style="background: rgba(255, 55, 95, 0.15); border: 1px solid rgba(255, 55, 95, 0.4); color: #fda4af; width: 100%;">
+            🧹 Purgar todas las sesiones de prueba (Empezar desde 0 para Lau)
+          </button>
+          <span class="field-help">Borra cualquier visita de prueba previa para dejar la base de datos impecable para Lau.</span>
         </div>
 
         <div id="settings-notice" class="dialog-notice"></div>

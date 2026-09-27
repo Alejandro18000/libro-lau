@@ -1,7 +1,8 @@
 /**
  * stats.js
  * Controlador del panel de telemetría estilo Apple Glass (iOS 18 / visionOS).
- * Procesa métricas de lectura en vivo, mapas de calor, relecturas, fotos y entorno técnico.
+ * Procesa métricas de lectura en vivo, mapas de calor, relecturas, fotos,
+ * detección de múltiples visitantes (Lau vs otros) y exclusión del equipo creador.
  */
 
 import './stats.css';
@@ -15,6 +16,7 @@ class AppleStatsDashboard {
     this.sessions = [];
     this.pollInterval = null;
     this.currentTab = 'tab-overview';
+    this.selectedVisitorFilter = 'all';
 
     this.initElements();
     this.bindEvents();
@@ -38,6 +40,14 @@ class AppleStatsDashboard {
     this.btnRefresh = document.getElementById('btn-refresh');
     this.btnSettings = document.getElementById('btn-settings');
     this.btnLock = document.getElementById('btn-lock');
+    this.chipCreatorMode = document.getElementById('chip-creator-mode');
+
+    // Visitor Detector Banner
+    this.visitorDetectorBox = document.getElementById('visitor-detector-box');
+    this.vdIcon = document.getElementById('vd-icon');
+    this.vdTitle = document.getElementById('vd-title');
+    this.vdDesc = document.getElementById('vd-desc');
+    this.vdFilterButtons = document.getElementById('vd-filter-buttons');
 
     // Segmented Control Tabs
     this.segmentBtns = document.querySelectorAll('.segment-btn');
@@ -96,6 +106,7 @@ class AppleStatsDashboard {
     this.btnSaveSettings = document.getElementById('btn-save-settings');
     this.btnCancelSettings = document.getElementById('btn-cancel-settings');
     this.btnCloseSettings = document.getElementById('btn-close-settings');
+    this.btnPurgeAll = document.getElementById('btn-purge-all');
     this.settingsNotice = document.getElementById('settings-notice');
   }
 
@@ -128,6 +139,13 @@ class AppleStatsDashboard {
       });
     });
 
+    // Chip de Modo Creador
+    if (this.chipCreatorMode) {
+      this.chipCreatorMode.addEventListener('click', () => {
+        alert('🛡️ Modo Creador Excluido:\n\nTu computadora y este navegador están 100% EXCLUIDOS de las métricas. Puedes abrir el libro tantas veces como quieras y NUNCA se sumará a las estadísticas ni alterará los datos de Lau.');
+      });
+    }
+
     // Botones de acción
     if (this.btnRefresh) {
       this.btnRefresh.addEventListener('click', () => {
@@ -155,6 +173,10 @@ class AppleStatsDashboard {
 
     if (this.btnSaveSettings) {
       this.btnSaveSettings.addEventListener('click', () => this.saveSettings());
+    }
+
+    if (this.btnPurgeAll) {
+      this.btnPurgeAll.addEventListener('click', () => this.purgeAllTestSessions());
     }
   }
 
@@ -238,6 +260,8 @@ class AppleStatsDashboard {
 
   unlockDashboard() {
     this.isAuthenticated = true;
+    // Excluir de forma permanente este dispositivo del conteo
+    localStorage.setItem('libro_lau_ignore_device', 'true');
     if (this.pinScreen) this.pinScreen.classList.add('hidden');
     this.fetchData();
 
@@ -259,8 +283,7 @@ class AppleStatsDashboard {
     const savedConfig = localStorage.getItem(analyticsConfig.storageKeys.remoteConfig);
     if (savedConfig) {
       try {
-        const parsed = JSON.parse(savedConfig);
-        if (parsed.firebaseUrl) return parsed;
+        return JSON.parse(savedConfig);
       } catch (e) {}
     }
     return {
@@ -340,14 +363,146 @@ class AppleStatsDashboard {
     });
   }
 
+  async deleteSession(sessionId) {
+    if (!confirm('¿Deseas descartar esta sesión de prueba de la base de datos?')) return;
+
+    try {
+      const cfg = this.getRemoteConfig();
+      if (cfg.firebaseUrl) {
+        await fetch(`${cfg.firebaseUrl.replace(/\/$/, '')}/sessions/${sessionId}.json`, { method: 'DELETE' });
+      }
+
+      // Eliminar de memoria local
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem(analyticsConfig.storageKeys.sessionsHistory) || '[]');
+        local = local.filter(s => s.sessionId !== sessionId);
+        localStorage.setItem(analyticsConfig.storageKeys.sessionsHistory, JSON.stringify(local));
+      } catch (e) {}
+
+      this.sessions = this.sessions.filter(s => s.sessionId !== sessionId);
+      this.renderDashboard();
+    } catch (e) {
+      alert('Error eliminando sesión: ' + e.message);
+    }
+  }
+
+  async purgeAllTestSessions() {
+    const confirmation = prompt('⚠️ ATENCIÓN:\nEsto borrará todas las visitas registradas hasta ahora para dejar la base de datos limpia en 0 antes de entregarle el libro a Lau.\n\nEscribe "BORRAR" para confirmar:');
+    if (confirmation !== 'BORRAR') return;
+
+    try {
+      const cfg = this.getRemoteConfig();
+      if (cfg.firebaseUrl) {
+        await fetch(`${cfg.firebaseUrl.replace(/\/$/, '')}/sessions.json`, { method: 'DELETE' });
+      }
+      localStorage.removeItem(analyticsConfig.storageKeys.sessionsHistory);
+      this.sessions = [];
+      this.closeSettings();
+      this.renderDashboard();
+      alert('✅ Todas las sesiones de prueba han sido purgadas. Base de datos reseteada a 0.');
+    } catch (e) {
+      alert('Error limpiando base de datos: ' + e.message);
+    }
+  }
+
+  renderVisitorDetector(sortedVisitors) {
+    if (!this.visitorDetectorBox) return;
+
+    if (!sortedVisitors || sortedVisitors.length === 0) {
+      this.visitorDetectorBox.style.display = 'none';
+      return;
+    }
+
+    this.visitorDetectorBox.style.display = 'flex';
+
+    if (sortedVisitors.length === 1) {
+      const v = sortedVisitors[0];
+      const sampleSession = v[1][0] || {};
+      this.visitorDetectorBox.className = 'apple-glass-card visitor-detector-banner single-visitor';
+      if (this.vdIcon) this.vdIcon.textContent = '🟢';
+      if (this.vdTitle) this.vdTitle.textContent = 'Solo 1 persona ha abierto el libro: Lau';
+      if (this.vdDesc) {
+        this.vdDesc.textContent = `Todas las ${v[1].length} lecturas provienen del mismo dispositivo (${sampleSession.device || 'Móvil'} en ${sampleSession.location?.city || 'Colombia'}). Nadie más tiene acceso.`;
+      }
+      if (this.vdFilterButtons) {
+        this.vdFilterButtons.innerHTML = `
+          <button class="vd-pill-btn active">Lectora Única (${v[1].length} visitas)</button>
+        `;
+      }
+    } else {
+      this.visitorDetectorBox.className = 'apple-glass-card visitor-detector-banner multiple-visitors';
+      if (this.vdIcon) this.vdIcon.textContent = '👥';
+      if (this.vdTitle) this.vdTitle.textContent = `Se detectaron ${sortedVisitors.length} personas o dispositivos distintos`;
+      if (this.vdDesc) {
+        this.vdDesc.textContent = `Se registraron lecturas desde distintos dispositivos. Puedes filtrar a continuación para ver únicamente la actividad de Lau:`;
+      }
+
+      if (this.vdFilterButtons) {
+        const filterBtnsHtml = [
+          `<button class="vd-pill-btn ${this.selectedVisitorFilter === 'all' ? 'active' : ''}" data-filter="all">Todas (${this.sessions.length})</button>`
+        ];
+
+        sortedVisitors.forEach((v, index) => {
+          const sample = v[1][0] || {};
+          const isLau = index === 0;
+          const label = isLau ? `👩 Lau (${v[1].length})` : `👤 Visitante #${index + 1} (${v[1].length} • ${sample.device || 'Web'})`;
+          const activeClass = this.selectedVisitorFilter === v[0] ? 'active' : '';
+          filterBtnsHtml.push(`<button class="vd-pill-btn ${activeClass}" data-filter="${v[0]}">${label}</button>`);
+        });
+
+        this.vdFilterButtons.innerHTML = filterBtnsHtml.join('');
+
+        this.vdFilterButtons.querySelectorAll('.vd-pill-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            this.selectedVisitorFilter = btn.getAttribute('data-filter');
+            this.renderDashboard();
+          });
+        });
+      }
+    }
+  }
+
   renderDashboard() {
     if (!this.sessions || this.sessions.length === 0) {
       this.renderEmptyState();
       return;
     }
 
-    const latest = this.sessions[0];
-    const totalSessions = this.sessions.length;
+    // 1. Agrupar sesiones por visitorId
+    const visitorGroups = new Map();
+    this.sessions.forEach(s => {
+      const vid = s.visitorId || 'desconocido';
+      if (!visitorGroups.has(vid)) {
+        visitorGroups.set(vid, []);
+      }
+      visitorGroups.get(vid).push(s);
+    });
+
+    // Ordenar visitantes por tiempo total (el principal con más lectura es Lau)
+    const sortedVisitors = Array.from(visitorGroups.entries()).sort((a, b) => {
+      const secA = a[1].reduce((acc, s) => acc + (s.totalSeconds || 0), 0);
+      const secB = b[1].reduce((acc, s) => acc + (s.totalSeconds || 0), 0);
+      return secB - secA;
+    });
+
+    const primaryVisitorId = sortedVisitors[0] ? sortedVisitors[0][0] : null;
+
+    // Renderizar banner de detección de visitantes
+    this.renderVisitorDetector(sortedVisitors);
+
+    // Filtrar sesiones según el filtro seleccionado
+    let activeSessions = this.sessions;
+    if (this.selectedVisitorFilter !== 'all') {
+      activeSessions = this.sessions.filter(s => s.visitorId === this.selectedVisitorFilter);
+    }
+
+    if (activeSessions.length === 0) {
+      activeSessions = this.sessions;
+    }
+
+    const latest = activeSessions[0];
+    const totalSessions = activeSessions.length;
     let totalSecs = 0;
     let musicPlays = 0;
     let maxMusicSecs = 0;
@@ -361,14 +516,11 @@ class AppleStatsDashboard {
     let maxPageGlobal = 0;
     let anyCompletedBook = false;
 
-    // Mapa acumulado por página
     const pageTimesAcc = {};
-
-    // Detección de lectura en vivo
     let isCurrentlyLive = false;
     let liveSession = null;
 
-    this.sessions.forEach(s => {
+    activeSessions.forEach(s => {
       totalSecs += (s.totalSeconds || 0);
       if (s.musicPlayed) musicPlays += (s.musicPlayCount || 1);
       if (s.musicDurationSec > maxMusicSecs) maxMusicSecs = s.musicDurationSec;
@@ -381,7 +533,6 @@ class AppleStatsDashboard {
       if (s.maxPageReached > maxPageGlobal) maxPageGlobal = s.maxPageReached;
       if (s.completedBook) anyCompletedBook = true;
 
-      // Fotos
       if (s.photosViewed && Array.isArray(s.photosViewed)) {
         s.photosViewed.forEach(p => photosZoomedSet.add(p));
       }
@@ -395,7 +546,6 @@ class AppleStatsDashboard {
         });
       }
 
-      // Páginas
       if (s.pageTimes) {
         Object.entries(s.pageTimes).forEach(([num, pData]) => {
           if (!pageTimesAcc[num]) {
@@ -412,7 +562,6 @@ class AppleStatsDashboard {
         });
       }
 
-      // Verificar si la sesión tiene actividad en los últimos 75 segundos
       const lastActiveMs = new Date(s.lastActiveAt || 0).getTime();
       if (Date.now() - lastActiveMs < 75000 && s.isLive !== false) {
         isCurrentlyLive = true;
@@ -424,7 +573,8 @@ class AppleStatsDashboard {
     if (this.liveActivityBar) {
       this.liveActivityBar.classList.toggle('active-live', isCurrentlyLive);
       if (isCurrentlyLive && liveSession) {
-        this.liveHeadline.textContent = `Lau está leyendo en vivo ahora mismo`;
+        const isLau = liveSession.visitorId === primaryVisitorId;
+        this.liveHeadline.textContent = isLau ? `Lau está leyendo en vivo ahora mismo` : `Visitante leyendo en vivo`;
         this.liveSubtext.textContent = `En ${liveSession.activePageTitle || 'el libro'} • ${liveSession.device || 'Móvil'}`;
         this.liveTimePill.textContent = `Lectura activa (${this.formatDuration(liveSession.totalSeconds)})`;
       } else {
@@ -439,7 +589,6 @@ class AppleStatsDashboard {
     const engagementScore = latest.engagementScore || Math.min(100, Math.round((totalSecs / 120) * 40 + (maxPageGlobal * 5)));
     if (this.valEngagementScore) this.valEngagementScore.textContent = `${engagementScore}%`;
     if (this.engagementRingFill) {
-      // Circunferencia = 2 * PI * 50 = 314.15
       const offset = 314 - (314 * (engagementScore / 100));
       this.engagementRingFill.style.strokeDashoffset = `${offset}`;
     }
@@ -465,7 +614,7 @@ class AppleStatsDashboard {
       if (this.favChapterTitle) this.favChapterTitle.textContent = favData.title;
       const pctOfTotal = totalSecs > 0 ? Math.round((favData.seconds / totalSecs) * 100) : 0;
       if (this.favChapterDesc) {
-        this.favChapterDesc.textContent = `Lau se ha detenido aquí ${this.formatDuration(favData.seconds)}, concentrando el ${pctOfTotal}% de toda su atención de lectura.`;
+        this.favChapterDesc.textContent = `Se ha detenido aquí ${this.formatDuration(favData.seconds)}, concentrando el ${pctOfTotal}% de toda la atención de lectura.`;
       }
       if (this.favChapterTime) this.favChapterTime.textContent = this.formatDuration(favData.seconds);
       if (this.favChapterPct) this.favChapterPct.textContent = `${pctOfTotal}%`;
@@ -473,7 +622,7 @@ class AppleStatsDashboard {
 
     // 4. Bento Grid
     if (this.valTotalVisits) this.valTotalVisits.textContent = `${totalSessions}`;
-    if (this.descVisitsCount) this.descVisitsCount.textContent = totalSessions === 1 ? '1 lectura registrada' : `${totalSessions} visitas al libro`;
+    if (this.descVisitsCount) this.descVisitsCount.textContent = totalSessions === 1 ? '1 lectura registrada' : `${totalSessions} visitas registradas`;
 
     if (this.valTotalReadingTime) this.valTotalReadingTime.textContent = this.formatDuration(totalSecs);
     const avgSecs = Math.round(totalSecs / Math.max(1, totalSessions));
@@ -506,7 +655,7 @@ class AppleStatsDashboard {
     this.renderDeviceTab(latest);
 
     // 8. Renderizar Tab 5: Historial Cronológico
-    this.renderSessionsTimeline();
+    this.renderSessionsTimeline(activeSessions, primaryVisitorId);
   }
 
   renderChaptersHeatmap(pageTimesAcc, maxPageSecs, totalSecs) {
@@ -527,7 +676,6 @@ class AppleStatsDashboard {
       const pctOfBook = totalSecs > 0 ? Math.round((data.seconds / totalSecs) * 100) : 0;
       const isFav = data.seconds === maxPageSecs && maxPageSecs > 0;
 
-      // Badges
       let badges = [];
       if (isFav) badges.push(`<span class="badge-tag-pill star">⭐ Favorito</span>`);
       if (data.reReads > 0) badges.push(`<span class="badge-tag-pill reread">🔄 Releído ${data.reReads}x</span>`);
@@ -589,7 +737,6 @@ class AppleStatsDashboard {
     if (this.musicStatCompleted) this.musicStatCompleted.textContent = musicCompleted ? 'Sí (100%)' : (musicPlays > 0 ? 'Parcial' : 'No');
     if (this.musicStatSpotify) this.musicStatSpotify.textContent = spotifyClicked ? 'Sí (Abrió Spotify)' : 'No';
 
-    // Lista de Fotos
     if (this.photosInspectContainer) {
       const photosEntries = Object.entries(photosDetailsMap);
       if (photosEntries.length === 0) {
@@ -633,11 +780,12 @@ class AppleStatsDashboard {
     `).join('');
   }
 
-  renderSessionsTimeline() {
+  renderSessionsTimeline(sessionsList, primaryVisitorId) {
     if (!this.sessionsTimelineContainer) return;
 
-    this.sessionsTimelineContainer.innerHTML = this.sessions.map((s, idx) => {
-      const num = this.sessions.length - idx;
+    this.sessionsTimelineContainer.innerHTML = sessionsList.map((s, idx) => {
+      const num = sessionsList.length - idx;
+      const isLau = !primaryVisitorId || s.visitorId === primaryVisitorId;
       const dateFormatted = new Date(s.startedAt || s.lastActiveAt).toLocaleString('es-CO', {
         weekday: 'short',
         day: 'numeric',
@@ -646,7 +794,6 @@ class AppleStatsDashboard {
         minute: '2-digit'
       });
 
-      // Recorrido secuencial de páginas
       let pathHtml = '';
       if (s.pageTransitions && s.pageTransitions.length > 0) {
         pathHtml = s.pageTransitions.map((t, i) => `
@@ -660,8 +807,20 @@ class AppleStatsDashboard {
       return `
         <div class="timeline-session-card">
           <div class="timeline-card-header">
-            <span class="timeline-badge">Sesión #${s.visitNumber || num}</span>
-            <span class="timeline-date">${dateFormatted} (${this.formatRelativeTime(s.lastActiveAt)})</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="timeline-badge" style="${isLau ? '' : 'background: rgba(255,159,10,0.18); border-color: rgba(255,159,10,0.4); color: #fed7aa;'}">
+                ${isLau ? '👩 Lau' : '👤 Otro Visitante'}
+              </span>
+              <span class="timeline-badge" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #fff;">
+                Visita #${s.visitNumber || num}
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="timeline-date">${dateFormatted} (${this.formatRelativeTime(s.lastActiveAt)})</span>
+              <button class="delete-session-btn" data-del-id="${s.sessionId}" title="Eliminar si fue una prueba de tu parte">
+                🗑️ Descartar
+              </button>
+            </div>
           </div>
 
           <div class="timeline-details-row">
@@ -694,9 +853,19 @@ class AppleStatsDashboard {
         </div>
       `;
     }).join('');
+
+    // Listener para botones de descartar sesión individual
+    this.sessionsTimelineContainer.querySelectorAll('.delete-session-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-del-id');
+        if (id) this.deleteSession(id);
+      });
+    });
   }
 
   renderEmptyState() {
+    if (this.visitorDetectorBox) this.visitorDetectorBox.style.display = 'none';
     if (this.valTotalVisits) this.valTotalVisits.textContent = '0';
     if (this.valTotalReadingTime) this.valTotalReadingTime.textContent = '0s';
     if (this.valLastSeenDate) this.valLastSeenDate.textContent = 'Sin lecturas';
