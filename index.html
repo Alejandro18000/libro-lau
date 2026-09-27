@@ -16,20 +16,40 @@
   <canvas id="petals-canvas"></canvas>
 
   <div class="app-wrapper">
-    <!-- Escenario del Libro (Páginas 100% limpias, sin iconos flotantes que tapen las letras) -->
+    <!-- Escenario del Libro con flechas laterales flotantes de apoyo -->
     <main class="book-stage">
+      <!-- Flecha lateral flotante Anterior (Fuera de las páginas para no tapar texto) -->
+      <button class="nav-side-chevron prev hidden" id="btn-side-prev" aria-label="Página anterior" title="Página anterior">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
       <!-- Libro Físico 3D (PageFlip) -->
       <div id="flipbook"></div>
+
+      <!-- Flecha lateral flotante Siguiente (Con pulso dorado sutil en portada) -->
+      <button class="nav-side-chevron next pulsing" id="btn-side-next" aria-label="Página siguiente" title="Página siguiente">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
     </main>
 
-    <!-- Barra de Navegación y Lectura Esencial -->
+    <!-- Píldora de guía inicial (Informa de forma intuitiva cómo hojear y se desvanece sola) -->
+    <div class="reading-hint-pill" id="reading-hint">
+      <span>✨ Toca la derecha o desliza para leer</span>
+      <span class="hint-arrow">›</span>
+    </div>
+
+    <!-- Barra de Navegación Flotante Fija (Dock elegante, siempre visible en pantalla) -->
     <footer class="bottom-control-bar">
       <!-- 1. Botón Anterior -->
       <button class="nav-btn-action" id="btn-prev-page" title="Página Anterior">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
-        <span class="nav-btn-text">Anterior</span>
+        <span class="nav-btn-text">Ant.</span>
       </button>
 
       <!-- 2. Botón Índice de Capítulos -->
@@ -41,28 +61,28 @@
         <span class="nav-btn-text">Índice</span>
       </button>
 
-      <!-- 3. Indicador de Página Central -->
-      <div class="page-indicator-badge" id="page-indicator" title="Clic para abrir el índice de capítulos">
+      <!-- 3. Indicador de Página Central (Abre índice al tocar) -->
+      <div class="page-indicator-badge" id="page-indicator" title="Toca para abrir el índice de capítulos">
         Portada
       </div>
 
       <!-- 4. Control de la canción 'invisible string' -->
       <button class="nav-btn-action nav-btn-music" id="btn-toggle-music" title="Reproducir 'invisible string' (Taylor Swift)">
         <span class="music-play-icon" id="music-bar-icon">▶</span>
-        <span class="nav-btn-text">invisible string</span>
+        <span class="nav-btn-text">Música</span>
       </button>
 
-      <!-- 5. Botón Siguiente -->
-      <button class="nav-btn-action" id="btn-next-page" title="Página Siguiente">
-        <span class="nav-btn-text">Siguiente</span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <!-- 5. Botón Siguiente (Destacado en oro como acción principal intuitiva) -->
+      <button class="nav-btn-action nav-btn-primary" id="btn-next-page" title="Página Siguiente">
+        <span class="nav-btn-text">Sig.</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </button>
 
       <!-- 6. Pantalla Completa Inmersiva -->
       <button class="nav-btn-icon" id="btn-toggle-fullscreen" title="Pantalla Completa">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
         </svg>
       </button>

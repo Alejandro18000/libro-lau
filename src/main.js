@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     minWidth: 260,
     maxWidth: 580,
     minHeight: 360,
-    maxHeight: 880,
+    maxHeight: isMobile ? Math.min(680, window.innerHeight - 85) : 880,
     maxShadowOpacity: isMobile ? 0.3 : 0.45,
     showCover: true,
     mobileScrollSupport: false,
@@ -46,14 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pageFlip.loadFromHTML(document.querySelectorAll('#flipbook .page'));
 
-  // Gestos táctiles nativos de deslizamiento (Swipe) para iPhone y Android
+  // Desvanecimiento suave de la píldora de guía de lectura
+  const hintEl = document.getElementById('reading-hint');
+  const dismissHint = () => {
+    if (hintEl && !hintEl.classList.contains('fade-out')) {
+      hintEl.classList.add('fade-out');
+      setTimeout(() => {
+        if (hintEl) hintEl.style.display = 'none';
+      }, 700);
+    }
+  };
+  setTimeout(dismissHint, 5500);
+
+  // Gestos táctiles nativos de deslizamiento (Swipe) y Toque (Tap) para iPhone y Android
   let touchStartX = 0;
   let touchStartY = 0;
+  let touchStartTime = 0;
 
   bookEl.addEventListener('touchstart', (e) => {
     if (e.touches && e.touches.length === 1) {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
     }
   }, { passive: true });
 
@@ -63,10 +77,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const touchEndY = e.changedTouches[0].clientY;
       const diffX = touchEndX - touchStartX;
       const diffY = touchEndY - touchStartY;
+      const duration = Date.now() - touchStartTime;
 
-      // Deslizamiento horizontal claro (al menos 40px y sin inclinación vertical pronunciada)
-      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.35) {
+      // 1. Gesto de Deslizamiento (Swipe horizontal claro)
+      if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.25) {
+        dismissHint();
         if (diffX < 0) {
+          pageFlip.flipNext();
+        } else {
+          pageFlip.flipPrev();
+        }
+        return;
+      }
+
+      // 2. Gesto de Toque Intuitivo (Tap en mitad derecha -> Siguiente, mitad izquierda -> Anterior)
+      if (Math.abs(diffX) < 15 && Math.abs(diffY) < 15 && duration < 350) {
+        const target = e.target;
+        const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action');
+        if (isInteractive) {
+          return;
+        }
+
+        dismissHint();
+        const rect = bookEl.getBoundingClientRect();
+        const tapX = touchEndX - rect.left;
+        if (tapX > rect.width * 0.45) {
           pageFlip.flipNext();
         } else {
           pageFlip.flipPrev();
@@ -74,6 +109,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }, { passive: true });
+
+  // Clic en escritorio para avanzar / retroceder tocando los lados del libro
+  bookEl.addEventListener('click', (e) => {
+    const target = e.target;
+    const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action');
+    if (isInteractive) return;
+
+    const rect = bookEl.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    dismissHint();
+    if (clickX > rect.width * 0.55) {
+      pageFlip.flipNext();
+    } else if (clickX < rect.width * 0.45) {
+      pageFlip.flipPrev();
+    }
+  });
 
   // Re-ajustar libro ante rotación de pantalla o cambio de tamaño
   window.addEventListener('resize', () => {
@@ -87,12 +138,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4. Modal de Capítulos
   const chaptersModal = new ChaptersModal((targetPage) => {
+    dismissHint();
     pageFlip.flip(targetPage);
   });
 
   // 5. Elementos de la interfaz
   const prevBtn = document.getElementById('btn-prev-page');
   const nextBtn = document.getElementById('btn-next-page');
+  const sidePrevBtn = document.getElementById('btn-side-prev');
+  const sideNextBtn = document.getElementById('btn-side-next');
   const pageIndicator = document.getElementById('page-indicator');
   const toggleMusicBtn = document.getElementById('btn-toggle-music');
   const openTocBtn = document.getElementById('btn-open-toc');
@@ -111,12 +165,25 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (currentPage >= totalPages - 1) {
         pageIndicator.textContent = "Contratapa";
       } else {
-        pageIndicator.textContent = `Página ${currentPage} de ${totalPages - 2}`;
+        pageIndicator.textContent = `Pág. ${currentPage} de ${totalPages - 2}`;
       }
     }
 
     if (prevBtn) prevBtn.disabled = currentPage === 0;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
+
+    // Chevrons laterales de navegación flotante
+    if (sidePrevBtn) {
+      const hidePrev = currentPage === 0;
+      sidePrevBtn.classList.toggle('hidden', hidePrev);
+      sidePrevBtn.disabled = hidePrev;
+    }
+    if (sideNextBtn) {
+      const hideNext = currentPage >= totalPages - 1;
+      sideNextBtn.classList.toggle('hidden', hideNext);
+      sideNextBtn.disabled = hideNext;
+      sideNextBtn.classList.toggle('pulsing', currentPage === 0);
+    }
   };
 
   const totalPages = pageFlip.getPageCount();
@@ -124,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 6. Evento de pasar página
   pageFlip.on('flip', (e) => {
+    dismissHint();
     const pageIndex = e.data;
     audioController.playFlipSound();
     updateNavigation(pageIndex, totalPages);
@@ -142,6 +210,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  // Conexión de chevrons laterales
+  if (sidePrevBtn) {
+    sidePrevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissHint();
+      pageFlip.flipPrev();
+    });
+  }
+  if (sideNextBtn) {
+    sideNextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissHint();
+      pageFlip.flipNext();
+    });
+  }
 
   // 7. Botón "Abrir el libro" en portada
   const startBtn = document.getElementById('btn-start-book');

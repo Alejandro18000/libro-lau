@@ -313,8 +313,42 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 38px 34px 24px;
+  padding: 34px 30px 22px;
   position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(197, 155, 63, 0.25) transparent;
+}
+
+.page-content-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+
+.page-content-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(197, 155, 63, 0.25);
+  border-radius: 4px;
+}
+
+.page-center-block {
+  margin: auto 0;
+  text-align: center;
+  width: 100%;
+}
+
+.page-body-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gold-divider-line {
+  width: 48px;
+  height: 1.5px;
+  background: var(--gold-warm);
+  margin: 0 auto;
+  opacity: 0.8;
 }
 
 .page-header-minimal {
@@ -323,7 +357,7 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid rgba(190, 170, 145, 0.3);
   padding-bottom: 6px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .page-header-title {
@@ -338,8 +372,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
-  padding-top: 6px;
+  margin-top: 8px;
+  padding-top: 5px;
   border-top: 1px solid rgba(190, 170, 145, 0.25);
 }
 
@@ -352,28 +386,109 @@ body {
 /* Tipografía de la carta */
 .letter-title {
   font-family: var(--font-serif);
-  font-size: 1.75rem;
+  font-size: 1.7rem;
   font-weight: 600;
   color: #3b2832;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   line-height: 1.25;
 }
 
 .letter-paragraph {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
-  line-height: 1.82;
+  font-size: 1.02rem;
+  line-height: 1.75;
   color: var(--text-primary);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   text-align: justify;
+}
+
+/* Estilos de Índice (Pág. 1) */
+.toc-heading {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.toc-container {
+  margin: 6px 0;
+}
+
+.chapter-item-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(197, 155, 63, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(70, 50, 30, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.chapter-item-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(197, 155, 63, 0.18);
+  border-color: var(--gold-warm);
+}
+
+.chapter-item-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.12rem;
+  color: #3b2832;
+}
+
+.chapter-item-desc {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.chapter-item-badge {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--gold-warm);
+  font-weight: 600;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+.toc-wreath-art {
+  max-width: 105px;
+  max-height: 75px;
+  margin: 10px auto 0;
+}
+
+/* Portadilla Capítulo I (Pág. 2) */
+.chapter-intro-art {
+  max-width: 140px;
+  max-height: 110px;
+  margin-bottom: 12px;
+}
+
+.chapter-intro-roman {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--gold-warm);
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+
+.chapter-intro-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  color: #3b2832;
+  margin-bottom: 14px;
 }
 
 /* Ilustraciones en Acuarela Integradas Directamente en la Hoja */
 .watercolor-spot-art {
   display: block;
-  margin: 12px auto;
-  max-width: 170px;
-  max-height: 170px;
+  margin: 10px auto;
+  max-width: 160px;
+  max-height: 140px;
   object-fit: contain;
   mix-blend-mode: multiply;
   pointer-events: none;
@@ -381,18 +496,18 @@ body {
 }
 
 .watercolor-spot-art.wide {
-  max-width: 260px;
-  max-height: 140px;
+  max-width: 250px;
+  max-height: 110px;
 }
 
 /* Fotografías Limpias */
 .clean-photo-frame {
   background: #ffffff;
-  padding: 8px 8px 18px 8px;
+  padding: 8px 8px 16px 8px;
   box-shadow: 0 4px 16px rgba(60, 45, 30, 0.1);
   border-radius: 2px;
-  margin: 10px auto;
-  max-width: 90%;
+  margin: 8px auto;
+  max-width: 92%;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: 1px solid rgba(220, 205, 185, 0.4);
@@ -405,7 +520,7 @@ body {
 
 .clean-photo-img {
   width: 100%;
-  height: 200px;
+  height: 180px;
   object-fit: cover;
   border-radius: 1px;
   display: block;
@@ -414,10 +529,100 @@ body {
 .clean-photo-caption {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: #6a5c64;
   text-align: center;
+  margin-top: 5px;
+}
+
+/* Foto Polaroid Individual (Pág. 4) */
+.single-photo-img {
+  height: 160px;
+}
+
+.photo-text-block {
+  margin-top: 10px;
+}
+
+/* Scrapbook 2 Fotos (Pág. 6) */
+.scrapbook-photos-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.scrapbook-frame {
+  flex: 1;
+  padding: 6px 6px 12px;
+  margin: 0;
+  min-width: 0;
+}
+
+.scrapbook-img {
+  height: 115px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.scrapbook-text-block {
+  margin: 6px 0;
+}
+
+.scrapbook-art {
+  max-height: 70px;
+  margin: 6px auto 0;
+}
+
+/* Música y Canción (Pág. 8) */
+.music-thread-art {
+  max-height: 55px;
+  margin: 6px auto 8px;
+}
+
+.spotify-link-row {
+  text-align: right;
   margin-top: 6px;
+}
+
+/* Cierre de Carta (Pág. 9) */
+.closing-frame {
+  margin: 0 auto 8px;
+}
+
+.closing-img {
+  height: 145px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.closing-text-block {
+  margin: 6px 0;
+}
+
+.closing-bouquet-art {
+  max-height: 80px;
+  margin: 6px auto 0;
+}
+
+/* Epílogo (Pág. 10) */
+.epilogue-box {
+  padding: 16px;
+}
+
+.epilogue-art {
+  max-width: 130px;
+  max-height: 95px;
+  margin-bottom: 12px;
+}
+
+.epilogue-title {
+  margin-bottom: 10px;
+}
+
+.epilogue-text {
+  text-align: center;
+  color: var(--text-muted);
 }
 
 /* Reproductor de música en acuarela */
@@ -425,8 +630,8 @@ body {
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(197, 155, 63, 0.35);
   border-radius: 12px;
-  padding: 14px 18px;
-  margin-top: 10px;
+  padding: 12px 16px;
+  margin-top: 8px;
   box-shadow: 0 4px 16px rgba(70, 50, 30, 0.06);
 }
 
@@ -551,21 +756,147 @@ body {
    ========================================================================== */
 
 .bottom-control-bar {
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 6px 14px;
-  background: rgba(253, 250, 246, 0.94);
-  border: 1px solid rgba(197, 155, 63, 0.45);
-  border-radius: 35px;
-  backdrop-filter: blur(14px);
+  padding: 7px 16px;
+  background: rgba(253, 250, 246, 0.96);
+  border: 1.5px solid rgba(197, 155, 63, 0.5);
+  border-radius: 40px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   box-shadow: 
-    0 10px 30px rgba(50, 30, 15, 0.16),
-    0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-top: 14px;
-  z-index: 40;
-  max-width: 95vw;
+    0 12px 35px rgba(45, 25, 10, 0.32),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-width: calc(100vw - 20px);
+  width: auto;
+  pointer-events: auto;
+}
+
+/* Flechas laterales de navegación flotante */
+.nav-side-chevron {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(253, 250, 246, 0.92);
+  border: 1.5px solid rgba(197, 155, 63, 0.45);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  box-shadow: 0 6px 20px rgba(45, 25, 10, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-side-chevron.prev {
+  left: -58px;
+}
+
+.nav-side-chevron.next {
+  right: -58px;
+}
+
+.nav-side-chevron:hover {
+  background: #ffffff;
+  border-color: var(--gold-warm);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 8px 25px rgba(197, 155, 63, 0.4);
+}
+
+.nav-side-chevron:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.nav-side-chevron.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+@keyframes pulse-chevron {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(197, 155, 63, 0.45);
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(197, 155, 63, 0);
+    transform: translateY(-50%) scale(1.06);
+  }
+}
+
+.nav-side-chevron.pulsing {
+  animation: pulse-chevron 2.2s infinite ease-in-out;
+}
+
+/* Píldora de guía de lectura inicial (Onboarding) */
+.reading-hint-pill {
+  position: fixed;
+  bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(43, 31, 24, 0.92);
+  color: #f7eee3;
+  border: 1px solid rgba(197, 155, 63, 0.6);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+  animation: hint-float 2.5s infinite ease-in-out;
+}
+
+.reading-hint-pill.fade-out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  pointer-events: none;
+}
+
+@keyframes hint-float {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-4px);
+  }
+}
+
+.reading-hint-pill .hint-arrow {
+  color: var(--gold-warm);
+  font-weight: 700;
+  display: inline-block;
+  animation: hint-nudge 1.5s infinite ease-in-out;
+}
+
+@keyframes hint-nudge {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
 }
 
 /* Botones de acción principales en la barra */
@@ -606,6 +937,27 @@ body {
   cursor: not-allowed;
   pointer-events: none;
   border-color: rgba(197, 155, 63, 0.15);
+}
+
+/* Botón Siguiente destacado en oro como acción principal */
+.nav-btn-action.nav-btn-primary {
+  background: linear-gradient(135deg, #c59b3f 0%, #aa7f28 100%);
+  border-color: #dfba63;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(197, 155, 63, 0.4);
+}
+
+.nav-btn-action.nav-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d4af37 0%, #ba8e33 100%);
+  border-color: #f0cb6c;
+  box-shadow: 0 4px 14px rgba(197, 155, 63, 0.55);
+}
+
+.nav-btn-action.nav-btn-primary:disabled {
+  background: rgba(200, 190, 175, 0.3);
+  color: #aaa;
+  border-color: rgba(180, 160, 140, 0.2);
+  box-shadow: none;
 }
 
 /* Botón secundario para Índice */
@@ -808,7 +1160,7 @@ body {
   }
 
   .app-wrapper {
-    padding: 8px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 6px calc(75px + env(safe-area-inset-bottom, 0px));
     min-height: 100vh;
     min-height: 100dvh;
     justify-content: center;
@@ -826,6 +1178,19 @@ body {
     box-shadow: 
       0 16px 36px -10px rgba(45, 25, 10, 0.45),
       0 6px 14px -4px rgba(0, 0, 0, 0.22);
+  }
+
+  /* Chevrons laterales flotantes en móvil */
+  .nav-side-chevron {
+    width: 38px;
+    height: 38px;
+    background: rgba(253, 250, 246, 0.88);
+  }
+  .nav-side-chevron.prev {
+    left: 4px;
+  }
+  .nav-side-chevron.next {
+    right: 4px;
   }
 
   /* Cubierta del libro en móviles */
@@ -870,33 +1235,34 @@ body {
 
   /* Contenido interior adaptado */
   .page-content-wrapper {
-    padding: 18px 16px 12px;
+    padding: 16px 14px 10px;
+    overflow-y: auto;
   }
 
   .page-header-minimal {
-    margin-bottom: 10px;
-    padding-bottom: 4px;
+    margin-bottom: 8px;
+    padding-bottom: 3px;
   }
 
   .page-header-title {
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     letter-spacing: 1.5px;
   }
 
   .letter-title {
     font-size: 1.3rem;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     line-height: 1.25;
   }
 
   .letter-paragraph {
-    font-size: 0.88rem;
-    line-height: 1.58;
-    margin-bottom: 8px;
+    font-size: 0.86rem;
+    line-height: 1.52;
+    margin-bottom: 7px;
   }
 
   .page-footer-num {
-    margin-top: 8px;
+    margin-top: 6px;
     padding-top: 4px;
   }
 
@@ -906,97 +1272,161 @@ body {
 
   /* Ilustraciones en acuarela optimizadas */
   .watercolor-spot-art {
-    max-width: 100px;
-    max-height: 80px;
-    margin: 6px auto;
+    max-width: 90px;
+    max-height: 65px;
+    margin: 4px auto;
   }
 
   .watercolor-spot-art.wide {
-    max-width: 190px;
-    max-height: 65px;
-    margin: 6px auto;
+    max-width: 170px;
+    max-height: 48px;
+    margin: 4px auto;
   }
 
-  /* Fotos en Polaroid */
+  .toc-wreath-art {
+    max-width: 80px;
+    max-height: 55px;
+    margin: 6px auto 0;
+  }
+
+  .chapter-intro-art {
+    max-width: 110px;
+    max-height: 80px;
+    margin-bottom: 8px;
+  }
+
+  .chapter-intro-title {
+    font-size: 1.7rem;
+    margin-bottom: 10px;
+  }
+
+  /* Fotos en Polaroid y Scrapbook */
   .clean-photo-frame {
-    padding: 6px 6px 12px;
-    margin: 6px auto;
-    max-width: 95%;
+    padding: 5px 5px 10px;
+    margin: 5px auto;
+    max-width: 96%;
   }
 
-  .clean-photo-img {
-    height: 140px;
+  .single-photo-img {
+    height: 120px;
+  }
+
+  .scrapbook-photos-row {
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .scrapbook-frame {
+    padding: 4px 4px 8px;
+  }
+
+  .scrapbook-img {
+    height: 80px;
+  }
+
+  .scrapbook-art {
+    max-height: 45px;
+    margin: 4px auto 0;
   }
 
   .clean-photo-caption {
-    font-size: 0.82rem;
-    margin-top: 4px;
+    font-size: 0.78rem;
+    margin-top: 3px;
+  }
+
+  /* Página 7 (Carta larga) */
+  .sketch-art {
+    max-height: 42px;
+    margin: 4px auto 0;
   }
 
   /* Reproductor de música en página 8 */
+  .music-thread-art {
+    max-height: 40px;
+    margin: 4px auto 6px;
+  }
+
   .music-card-watercolor {
-    padding: 10px 12px;
-    margin-top: 8px;
+    padding: 8px 10px;
+    margin-top: 6px;
     border-radius: 10px;
   }
 
   .music-player-row {
-    gap: 10px;
+    gap: 8px;
   }
 
   .album-cover-thumb {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
   }
 
   .song-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .song-artist {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
 
   .player-controls-line {
-    gap: 10px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 5px;
   }
 
   .btn-play-pause-track {
-    width: 28px;
-    height: 28px;
-    font-size: 0.75rem;
+    width: 26px;
+    height: 26px;
+    font-size: 0.72rem;
   }
 
   .time-display {
-    font-size: 0.68rem;
-    min-width: 58px;
+    font-size: 0.65rem;
+    min-width: 54px;
   }
 
   .spotify-btn-action {
-    padding: 5px 12px;
-    font-size: 0.72rem;
-    margin-top: 6px;
+    padding: 4px 10px;
+    font-size: 0.70rem;
+    margin-top: 5px;
   }
 
-  /* Barra inferior de navegación */
+  /* Página 9 (Cierre de carta) */
+  .closing-frame {
+    margin-bottom: 6px;
+  }
+
+  .closing-img {
+    height: 105px;
+  }
+
+  .closing-bouquet-art {
+    max-height: 55px;
+    margin: 4px auto 0;
+  }
+
+  /* Barra inferior de navegación flotante fija */
   .bottom-control-bar {
     gap: 6px;
-    padding: 6px 10px;
-    border-radius: 28px;
-    margin-top: 8px;
-    max-width: 96vw;
+    padding: 6px 12px;
+    border-radius: 30px;
+    max-width: calc(100vw - 16px);
   }
 
   .nav-btn-action {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    gap: 5px;
+    padding: 6px 10px;
+    font-size: 0.76rem;
+    gap: 4px;
+    border-radius: 16px;
+  }
+
+  .nav-btn-action .nav-btn-text {
+    display: inline-block;
   }
 
   .page-indicator-badge {
-    font-size: 0.9rem;
-    padding: 5px 10px;
+    font-size: 0.86rem;
+    padding: 4px 9px;
   }
 
   .nav-btn-icon {
@@ -1008,7 +1438,7 @@ body {
 /* Pantallas móviles estrechas (iPhone estándar, Android 360px - 480px) */
 @media (max-width: 520px) {
   .app-wrapper {
-    padding: 6px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 4px calc(72px + env(safe-area-inset-bottom, 0px));
     gap: 6px;
   }
 
@@ -1038,82 +1468,89 @@ body {
   }
 
   .page-content-wrapper {
-    padding: 14px 12px 10px;
+    padding: 12px 10px 8px;
   }
 
   .page-header-minimal {
-    margin-bottom: 6px;
-    padding-bottom: 3px;
+    margin-bottom: 5px;
+    padding-bottom: 2px;
   }
 
   .page-header-title {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
   }
 
   .letter-title {
-    font-size: 1.2rem;
-    margin-bottom: 6px;
+    font-size: 1.15rem;
+    margin-bottom: 5px;
   }
 
   .letter-paragraph {
-    font-size: 0.83rem;
-    line-height: 1.5;
-    margin-bottom: 6px;
+    font-size: 0.81rem;
+    line-height: 1.46;
+    margin-bottom: 5px;
   }
 
-  .clean-photo-img {
-    height: 120px;
+  .single-photo-img {
+    height: 105px;
   }
 
-  .watercolor-spot-art {
-    max-width: 80px;
-    max-height: 60px;
-    margin: 3px auto 4px;
+  .scrapbook-img {
+    height: 70px;
   }
 
-  .watercolor-spot-art.wide {
-    max-width: 160px;
-    max-height: 50px;
+  .scrapbook-frame {
+    padding: 3px 3px 6px;
   }
 
-  /* Barra inferior ultracompacta para móviles */
+  .scrapbook-art {
+    max-height: 38px;
+  }
+
+  .sketch-art {
+    max-height: 35px;
+  }
+
+  .closing-img {
+    height: 90px;
+  }
+
+  .closing-bouquet-art {
+    max-height: 45px;
+  }
+
   .bottom-control-bar {
     gap: 4px;
-    padding: 4px 6px;
-    border-radius: 25px;
-    max-width: 98vw;
+    padding: 5px 8px;
+    border-radius: 26px;
+    max-width: calc(100vw - 10px);
   }
 
   .nav-btn-action {
-    padding: 6px 8px;
-    font-size: 0.74rem;
+    padding: 5px 8px;
+    font-size: 0.72rem;
     gap: 3px;
     border-radius: 14px;
   }
 
-  .nav-btn-action .nav-btn-text {
-    display: none; /* En pantallas pequeñas se muestran solo los iconos para evitar desbordes */
-  }
-
   .page-indicator-badge {
-    font-size: 0.82rem;
-    padding: 4px 8px;
-    border-radius: 12px;
+    font-size: 0.80rem;
+    padding: 3px 7px;
+    border-radius: 10px;
   }
 
   .nav-btn-icon {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
-  /* Modal de capítulos en móviles */
   .chapters-modal-box {
     padding: 20px 16px 16px;
     max-width: 92vw;
   }
 
   .chapters-modal-title {
-    font-size: 1.5rem;
+    font-size: 1.45rem;
   }
 
   .chapters-modal-box .chapter-item-btn {
@@ -1125,25 +1562,46 @@ body {
 /* Teléfonos muy compactos (iPhone SE / pantallas <= 380px) */
 @media (max-width: 380px) {
   .page-content-wrapper {
-    padding: 12px 10px 8px;
+    padding: 10px 8px 6px;
   }
 
   .letter-paragraph {
-    font-size: 0.79rem;
-    line-height: 1.45;
-    margin-bottom: 5px;
+    font-size: 0.76rem;
+    line-height: 1.40;
+    margin-bottom: 4px;
   }
 
-  .clean-photo-img {
-    height: 105px;
+  .single-photo-img {
+    height: 90px;
   }
 
-  .watercolor-spot-art {
-    max-height: 50px;
+  .scrapbook-img {
+    height: 60px;
+  }
+
+  .scrapbook-art {
+    display: none;
+  }
+
+  .sketch-art {
+    display: none; /* Asegura que el texto completo de 138 palabras quepa sin scroll en iPhone SE */
+  }
+
+  .closing-img {
+    height: 78px;
+  }
+
+  .closing-bouquet-art {
+    max-height: 38px;
   }
 
   .page-indicator-badge {
-    font-size: 0.76rem;
-    padding: 3px 6px;
+    font-size: 0.74rem;
+    padding: 3px 5px;
+  }
+
+  .nav-btn-action {
+    padding: 4px 6px;
+    font-size: 0.68rem;
   }
 }
