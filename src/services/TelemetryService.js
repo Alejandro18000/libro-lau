@@ -653,6 +653,11 @@ export class TelemetryService {
           `👉 *Sigue su lectura en vivo:* https://alejandro18000.github.io/libro-lau/stats.html`;
 
         this.sendWhatsAppMessage(phone, apiKey, openMsg);
+
+        // Alerta directa de Telegram si está configurado
+        if (config.telegram && config.telegram.enabled && config.telegram.botToken && config.telegram.chatId) {
+          this.sendTelegramMessage(config.telegram.botToken, config.telegram.chatId, openMsg);
+        }
       }
     } catch (e) {
       console.warn("WhatsApp alert error:", e);
@@ -692,6 +697,10 @@ export class TelemetryService {
         `🔗 *Ver estadísticas completas:* https://alejandro18000.github.io/libro-lau/stats.html`;
 
       this.sendWhatsAppMessage(phone, apiKey, summaryMsg);
+
+      if (config.telegram && config.telegram.enabled && config.telegram.botToken && config.telegram.chatId) {
+        this.sendTelegramMessage(config.telegram.botToken, config.telegram.chatId, summaryMsg);
+      }
     } catch(e) {}
   }
 
@@ -701,6 +710,23 @@ export class TelemetryService {
     const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apiKey)}`;
     try {
       fetch(url, { mode: 'no-cors', keepalive: true }).catch(() => {});
+    } catch (e) {}
+  }
+
+  sendTelegramMessage(token, chatId, text) {
+    if (!token || !chatId || !text) return;
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    try {
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: text,
+          parse_mode: 'Markdown'
+        }),
+        keepalive: true
+      }).catch(() => {});
     } catch (e) {}
   }
 }
