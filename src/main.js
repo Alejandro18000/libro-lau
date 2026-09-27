@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     width: 490,
     height: 680,
     size: 'stretch',
-    minWidth: 260,
+    minWidth: isMobile ? 320 : 260,
     maxWidth: 580,
     minHeight: 360,
     maxHeight: isMobile ? Math.min(680, window.innerHeight - 85) : 880,
@@ -43,30 +43,54 @@ document.addEventListener('DOMContentLoaded', () => {
     usePortrait: true,
     autoSize: true,
     drawShadow: true,
-    flippingTime: isMobile ? 550 : 750,
-    useMouseEvents: true
+    flippingTime: isMobile ? 600 : 750,
+    useMouseEvents: false,
+    disableFlipByClick: true
   });
 
   pageFlip.loadFromHTML(document.querySelectorAll('#flipbook .page'));
+  const totalPages = pageFlip.getPageCount();
 
-  // Control de bloqueo de clics fantasmas e interacciones durante transiciones
-  let blockInteractiveUntil = 0;
+  // Mutex de estado de animación y control de transiciones seguro
+  let isFlipping = false;
+  let flipLockUntil = 0;
+  let lastTouchHandledTime = 0;
+
+  pageFlip.on('changeState', (e) => {
+    isFlipping = (e.data === 'flipping');
+  });
+
+  const canFlip = () => {
+    if (isFlipping) return false;
+    if (pageFlip.getState() === 'flipping') return false;
+    if (Date.now() < flipLockUntil) return false;
+    return true;
+  };
 
   const safeFlipNext = () => {
-    if (Date.now() < blockInteractiveUntil) return;
-    blockInteractiveUntil = Date.now() + 650;
+    if (!canFlip()) return;
+    const current = pageFlip.getCurrentPageIndex();
+    if (current >= totalPages - 1) return;
+    isFlipping = true;
+    flipLockUntil = Date.now() + (isMobile ? 650 : 800);
     pageFlip.flipNext();
   };
 
   const safeFlipPrev = () => {
-    if (Date.now() < blockInteractiveUntil) return;
-    blockInteractiveUntil = Date.now() + 650;
+    if (!canFlip()) return;
+    const current = pageFlip.getCurrentPageIndex();
+    if (current <= 0) return;
+    isFlipping = true;
+    flipLockUntil = Date.now() + (isMobile ? 650 : 800);
     pageFlip.flipPrev();
   };
 
   const safeFlipTo = (target) => {
-    if (Date.now() < blockInteractiveUntil) return;
-    blockInteractiveUntil = Date.now() + 750;
+    if (!canFlip()) return;
+    const current = pageFlip.getCurrentPageIndex();
+    if (target === current) return;
+    isFlipping = true;
+    flipLockUntil = Date.now() + (isMobile ? 700 : 850);
     pageFlip.flip(target);
   };
 
@@ -92,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const duration = Date.now() - touchStartTime;
 
       // 1. Gesto de Deslizamiento (Swipe horizontal claro)
-      if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.25) {
-        if (Date.now() < blockInteractiveUntil) return;
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.3 && duration < 600) {
+        lastTouchHandledTime = Date.now();
         telemetry.onSwipe();
         if (diffX < 0) {
           safeFlipNext();
@@ -103,21 +127,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 2. Gesto de Toque Intuitivo (Tap en mitad derecha -> Siguiente, mitad izquierda -> Anterior)
+      // 2. Gesto de Toque Intuitivo (Tap en el libro)
       if (Math.abs(diffX) < 15 && Math.abs(diffY) < 15 && duration < 350) {
         const target = e.target;
-        const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action');
+        const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action, input, select');
         if (isInteractive) {
           return;
         }
-        if (Date.now() < blockInteractiveUntil) return;
 
+        lastTouchHandledTime = Date.now();
         telemetry.onTap();
+
+        // Si el libro está cerrado en portada, cualquier toque abre el libro al Índice (Pág. 1)
+        if (pageFlip.getCurrentPageIndex() === 0) {
+          safeFlipTo(1);
+          return;
+        }
+
         const rect = bookEl.getBoundingClientRect();
         const tapX = touchEndX - rect.left;
-        if (tapX > rect.width * 0.45) {
+        if (tapX > rect.width * 0.55) {
           safeFlipNext();
-        } else {
+        } else if (tapX < rect.width * 0.45) {
           safeFlipPrev();
         }
       }
@@ -126,10 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Clic en escritorio para avanzar / retroceder tocando los lados del libro
   bookEl.addEventListener('click', (e) => {
+    // Si fue precedido por un evento táctil en móvil, omitir clic sintético
+    if (Date.now() - lastTouchHandledTime < 500) return;
+
     const target = e.target;
-    const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action');
+    const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action, input, select');
     if (isInteractive) return;
-    if (Date.now() < blockInteractiveUntil) return;
+
+    // Si el libro está cerrado en portada, un clic lo abre al Índice (Pág. 1)
+    if (pageFlip.getCurrentPageIndex() === 0) {
+      safeFlipTo(1);
+      return;
+    }
 
     const rect = bookEl.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -184,13 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
   };
 
-  const totalPages = pageFlip.getPageCount();
   updateNavigation(0, totalPages);
 
   // 6. Evento de pasar página
   pageFlip.on('flip', (e) => {
     const pageIndex = e.data;
-    blockInteractiveUntil = Date.now() + 650;
+    isFlipping = false;
+    flipLockUntil = Date.now() + 150;
     audioController.playFlipSound();
     updateNavigation(pageIndex, totalPages);
     telemetry.onPageFlip(pageIndex, totalPages);
@@ -213,41 +252,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // 7. Botón "Abrir el libro" en portada
   const startBtn = document.getElementById('btn-start-book');
   if (startBtn) {
-    const handleStartBook = (e) => {
+    startBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const current = pageFlip.getCurrentPageIndex();
-      if (current !== 0) return;
-      if (Date.now() < blockInteractiveUntil) return;
+      if (!canFlip()) return;
+      if (pageFlip.getCurrentPageIndex() !== 0) return;
 
-      blockInteractiveUntil = Date.now() + 850;
-      pageFlip.flip(1); // Abre explícitamente a la Página 1 (Índice)
-      audioController.playFlipSound();
-    };
-
-    startBtn.addEventListener('click', handleStartBook);
-    startBtn.addEventListener('touchend', handleStartBook);
+      safeFlipTo(1); // Abre explícitamente a la Página 1 (Índice)
+    });
   }
 
   // 8. Enlaces dentro del índice
   document.querySelectorAll('.toc-container .chapter-item-btn').forEach(btn => {
-    const handleChapterClick = (e) => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Si el libro todavía se está abriendo desde la portada o animando, ignorar clics fantasma
-      if (Date.now() < blockInteractiveUntil) return;
+      if (!canFlip()) return;
       const current = pageFlip.getCurrentPageIndex();
       if (current === 0) return;
 
       const target = parseInt(btn.getAttribute('data-target-page'), 10);
       if (target && target !== current) {
         safeFlipTo(target);
-        audioController.playFlipSound();
       }
-    };
-
-    btn.addEventListener('click', handleChapterClick);
+    });
   });
 
   // 9. Fotos ampliables con Lightbox

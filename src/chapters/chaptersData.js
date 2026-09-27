@@ -29,7 +29,7 @@ export const chapters = [
     number: 1,
     title: "27 de Septiembre",
     date: "27 de Septiembre",
-    targetPage: 3,
+    targetPage: 2,
     description: "Carta de cumpleaños",
     isUpcoming: false
   },
