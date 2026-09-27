@@ -23,27 +23,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderer = new BookRenderer('flipbook');
   renderer.render();
 
-  // 3. Inicializar PageFlip
+  // 3. Inicializar PageFlip optimizado para Móvil (Android & iPhone) y Escritorio
   const bookEl = document.getElementById('flipbook');
+  const isMobile = window.innerWidth <= 768;
   const pageFlip = new PageFlip(bookEl, {
     width: 490,
     height: 680,
     size: 'stretch',
-    minWidth: 320,
+    minWidth: 260,
     maxWidth: 580,
-    minHeight: 460,
+    minHeight: 360,
     maxHeight: 880,
-    maxShadowOpacity: 0.45,
+    maxShadowOpacity: isMobile ? 0.3 : 0.45,
     showCover: true,
     mobileScrollSupport: false,
     usePortrait: true,
     autoSize: true,
     drawShadow: true,
-    flippingTime: 800,
+    flippingTime: isMobile ? 550 : 750,
     useMouseEvents: true
   });
 
   pageFlip.loadFromHTML(document.querySelectorAll('#flipbook .page'));
+
+  // Gestos táctiles nativos de deslizamiento (Swipe) para iPhone y Android
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  bookEl.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  bookEl.addEventListener('touchend', (e) => {
+    if (e.changedTouches && e.changedTouches.length === 1) {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      // Deslizamiento horizontal claro (al menos 40px y sin inclinación vertical pronunciada)
+      if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.35) {
+        if (diffX < 0) {
+          pageFlip.flipNext();
+        } else {
+          pageFlip.flipPrev();
+        }
+      }
+    }
+  }, { passive: true });
+
+  // Re-ajustar libro ante rotación de pantalla o cambio de tamaño
+  window.addEventListener('resize', () => {
+    if (pageFlip) pageFlip.update();
+  });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      if (pageFlip) pageFlip.update();
+    }, 250);
+  });
 
   // 4. Modal de Capítulos
   const chaptersModal = new ChaptersModal((targetPage) => {

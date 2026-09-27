@@ -63,6 +63,7 @@ body {
   position: relative;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -796,50 +797,353 @@ body {
   box-shadow: 0 4px 12px rgba(197, 155, 63, 0.2);
 }
 
-/* Responsive */
+/* ==========================================================================
+   OPTIMIZACIÓN DEDICADA PARA DISPOSITIVOS MÓVILES (ANDROID & IPHONE)
+   ========================================================================== */
+
 @media (max-width: 768px) {
-  .page-content-wrapper {
-    padding: 22px 18px 16px;
+  body {
+    background-position: center center;
+    background-attachment: scroll; /* Vital para fluidez y prevención de zoom bugs en iOS Safari */
   }
-  .clean-photo-img {
-    height: 165px;
+
+  .app-wrapper {
+    padding: 8px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    min-height: 100dvh;
+    justify-content: center;
+    gap: 8px;
   }
-  .letter-title {
-    font-size: 1.4rem;
+
+  .book-stage {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    perspective: 1800px;
   }
-  .letter-paragraph {
-    font-size: 0.92rem;
-    line-height: 1.65;
+
+  #flipbook {
+    box-shadow: 
+      0 16px 36px -10px rgba(45, 25, 10, 0.45),
+      0 6px 14px -4px rgba(0, 0, 0, 0.22);
   }
+
+  /* Cubierta del libro en móviles */
+  .cover-medallion-content {
+    padding-left: 30px;
+    padding-top: 16px;
+  }
+
+  .cover-medallion-content.back {
+    padding-left: 0;
+    padding-right: 30px;
+    padding-top: 16px;
+  }
+
+  .cover-gold-badge {
+    width: 180px;
+    height: 140px;
+  }
+
   .cover-gold-title {
-    font-size: 1.95rem;
+    font-size: 1.65rem;
+    letter-spacing: 2px;
   }
+
+  .cover-gold-subtitle {
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+  }
+
+  .cover-gold-divider {
+    width: 38px;
+    margin: 6px 0;
+  }
+
+  .btn-open-book {
+    margin-top: 14px;
+    padding: 8px 20px;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    gap: 6px;
+  }
+
+  /* Contenido interior adaptado */
+  .page-content-wrapper {
+    padding: 18px 16px 12px;
+  }
+
+  .page-header-minimal {
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+  }
+
+  .page-header-title {
+    font-size: 0.76rem;
+    letter-spacing: 1.5px;
+  }
+
+  .letter-title {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    line-height: 1.25;
+  }
+
+  .letter-paragraph {
+    font-size: 0.88rem;
+    line-height: 1.58;
+    margin-bottom: 8px;
+  }
+
+  .page-footer-num {
+    margin-top: 8px;
+    padding-top: 4px;
+  }
+
+  .page-num-text {
+    font-size: 0.8rem;
+  }
+
+  /* Ilustraciones en acuarela optimizadas */
+  .watercolor-spot-art {
+    max-width: 100px;
+    max-height: 80px;
+    margin: 6px auto;
+  }
+
+  .watercolor-spot-art.wide {
+    max-width: 190px;
+    max-height: 65px;
+    margin: 6px auto;
+  }
+
+  /* Fotos en Polaroid */
+  .clean-photo-frame {
+    padding: 6px 6px 12px;
+    margin: 6px auto;
+    max-width: 95%;
+  }
+
+  .clean-photo-img {
+    height: 140px;
+  }
+
+  .clean-photo-caption {
+    font-size: 0.82rem;
+    margin-top: 4px;
+  }
+
+  /* Reproductor de música en página 8 */
+  .music-card-watercolor {
+    padding: 10px 12px;
+    margin-top: 8px;
+    border-radius: 10px;
+  }
+
+  .music-player-row {
+    gap: 10px;
+  }
+
+  .album-cover-thumb {
+    width: 44px;
+    height: 44px;
+  }
+
+  .song-title {
+    font-size: 1rem;
+  }
+
+  .song-artist {
+    font-size: 0.74rem;
+  }
+
+  .player-controls-line {
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .btn-play-pause-track {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .time-display {
+    font-size: 0.68rem;
+    min-width: 58px;
+  }
+
+  .spotify-btn-action {
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    margin-top: 6px;
+  }
+
+  /* Barra inferior de navegación */
   .bottom-control-bar {
     gap: 6px;
-    padding: 5px 10px;
+    padding: 6px 10px;
     border-radius: 28px;
+    margin-top: 8px;
+    max-width: 96vw;
   }
+
   .nav-btn-action {
     padding: 6px 12px;
     font-size: 0.78rem;
     gap: 5px;
   }
+
   .page-indicator-badge {
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     padding: 5px 10px;
+  }
+
+  .nav-btn-icon {
+    width: 32px;
+    height: 32px;
   }
 }
 
+/* Pantallas móviles estrechas (iPhone estándar, Android 360px - 480px) */
 @media (max-width: 520px) {
-  .nav-btn-music .nav-btn-text,
-  .nav-btn-secondary .nav-btn-text {
-    display: none;
+  .app-wrapper {
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+    gap: 6px;
   }
+
+  .cover-medallion-content {
+    padding-left: 26px;
+    padding-top: 12px;
+  }
+
+  .cover-gold-badge {
+    width: 165px;
+    height: 125px;
+  }
+
+  .cover-gold-title {
+    font-size: 1.48rem;
+    letter-spacing: 1.5px;
+  }
+
+  .cover-gold-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .btn-open-book {
+    margin-top: 10px;
+    padding: 6px 16px;
+    font-size: 0.68rem;
+  }
+
+  .page-content-wrapper {
+    padding: 14px 12px 10px;
+  }
+
+  .page-header-minimal {
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+  }
+
+  .page-header-title {
+    font-size: 0.7rem;
+  }
+
+  .letter-title {
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+  }
+
+  .letter-paragraph {
+    font-size: 0.83rem;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .clean-photo-img {
+    height: 120px;
+  }
+
+  .watercolor-spot-art {
+    max-width: 80px;
+    max-height: 60px;
+    margin: 3px auto 4px;
+  }
+
+  .watercolor-spot-art.wide {
+    max-width: 160px;
+    max-height: 50px;
+  }
+
+  /* Barra inferior ultracompacta para móviles */
   .bottom-control-bar {
-    gap: 5px;
-    padding: 4px 8px;
+    gap: 4px;
+    padding: 4px 6px;
+    border-radius: 25px;
+    max-width: 98vw;
   }
+
   .nav-btn-action {
-    padding: 6px 10px;
+    padding: 6px 8px;
+    font-size: 0.74rem;
+    gap: 3px;
+    border-radius: 14px;
+  }
+
+  .nav-btn-action .nav-btn-text {
+    display: none; /* En pantallas pequeñas se muestran solo los iconos para evitar desbordes */
+  }
+
+  .page-indicator-badge {
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+  }
+
+  .nav-btn-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Modal de capítulos en móviles */
+  .chapters-modal-box {
+    padding: 20px 16px 16px;
+    max-width: 92vw;
+  }
+
+  .chapters-modal-title {
+    font-size: 1.5rem;
+  }
+
+  .chapters-modal-box .chapter-item-btn {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Teléfonos muy compactos (iPhone SE / pantallas <= 380px) */
+@media (max-width: 380px) {
+  .page-content-wrapper {
+    padding: 12px 10px 8px;
+  }
+
+  .letter-paragraph {
+    font-size: 0.79rem;
+    line-height: 1.45;
+    margin-bottom: 5px;
+  }
+
+  .clean-photo-img {
+    height: 105px;
+  }
+
+  .watercolor-spot-art {
+    max-height: 50px;
+  }
+
+  .page-indicator-badge {
+    font-size: 0.76rem;
+    padding: 3px 6px;
   }
 }
