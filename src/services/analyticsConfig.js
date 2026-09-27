@@ -8,11 +8,8 @@ export const analyticsConfig = {
   // 2709 = 27 de Septiembre (puedes cambiarlo al PIN de 4 dígitos que prefieras)
   dashboardPin: '2709',
 
-  // Backend remoto:
-  // URL de Firebase Realtime Database (ej: 'https://libro-lau-stats-default-rtdb.firebaseio.com')
-  // O URL de Google Apps Script Web App si se usa Google Sheets
-  // También puede configurarse directamente desde la interfaz de stats.html
-  firebaseUrl: '',
+  // Backend remoto activo: Firebase Realtime Database
+  firebaseUrl: 'https://com-example-myapplicatio-12a02-default-rtdb.firebaseio.com',
   googleSheetsUrl: '',
 
   // Tiempo de inactividad para considerar una visita como nueva sesión (en minutos)
