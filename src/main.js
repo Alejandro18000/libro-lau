@@ -49,6 +49,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pageFlip.loadFromHTML(document.querySelectorAll('#flipbook .page'));
 
+  // Control de bloqueo de clics fantasmas e interacciones durante transiciones
+  let blockInteractiveUntil = 0;
+
+  const safeFlipNext = () => {
+    if (Date.now() < blockInteractiveUntil) return;
+    blockInteractiveUntil = Date.now() + 650;
+    pageFlip.flipNext();
+  };
+
+  const safeFlipPrev = () => {
+    if (Date.now() < blockInteractiveUntil) return;
+    blockInteractiveUntil = Date.now() + 650;
+    pageFlip.flipPrev();
+  };
+
+  const safeFlipTo = (target) => {
+    if (Date.now() < blockInteractiveUntil) return;
+    blockInteractiveUntil = Date.now() + 750;
+    pageFlip.flip(target);
+  };
+
   // Gestos táctiles nativos de deslizamiento (Swipe) y Toque (Tap) para iPhone y Android
   let touchStartX = 0;
   let touchStartY = 0;
@@ -72,11 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 1. Gesto de Deslizamiento (Swipe horizontal claro)
       if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.25) {
+        if (Date.now() < blockInteractiveUntil) return;
         telemetry.onSwipe();
         if (diffX < 0) {
-          pageFlip.flipNext();
+          safeFlipNext();
         } else {
-          pageFlip.flipPrev();
+          safeFlipPrev();
         }
         return;
       }
@@ -88,14 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isInteractive) {
           return;
         }
+        if (Date.now() < blockInteractiveUntil) return;
 
         telemetry.onTap();
         const rect = bookEl.getBoundingClientRect();
         const tapX = touchEndX - rect.left;
         if (tapX > rect.width * 0.45) {
-          pageFlip.flipNext();
+          safeFlipNext();
         } else {
-          pageFlip.flipPrev();
+          safeFlipPrev();
         }
       }
     }
@@ -106,13 +129,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const target = e.target;
     const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action');
     if (isInteractive) return;
+    if (Date.now() < blockInteractiveUntil) return;
 
     const rect = bookEl.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     if (clickX > rect.width * 0.55) {
-      pageFlip.flipNext();
+      safeFlipNext();
     } else if (clickX < rect.width * 0.45) {
-      pageFlip.flipPrev();
+      safeFlipPrev();
     }
   });
 
@@ -128,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4. Modal de Capítulos
   const chaptersModal = new ChaptersModal((targetPage) => {
-    pageFlip.flip(targetPage);
+    safeFlipTo(targetPage);
   });
 
   // 5. Elementos de la interfaz
@@ -166,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 6. Evento de pasar página
   pageFlip.on('flip', (e) => {
     const pageIndex = e.data;
+    blockInteractiveUntil = Date.now() + 650;
     audioController.playFlipSound();
     updateNavigation(pageIndex, totalPages);
     telemetry.onPageFlip(pageIndex, totalPages);
@@ -188,22 +213,41 @@ document.addEventListener('DOMContentLoaded', () => {
   // 7. Botón "Abrir el libro" en portada
   const startBtn = document.getElementById('btn-start-book');
   if (startBtn) {
-    startBtn.addEventListener('click', (e) => {
+    const handleStartBook = (e) => {
+      e.preventDefault();
       e.stopPropagation();
-      pageFlip.flipNext();
+      const current = pageFlip.getCurrentPageIndex();
+      if (current !== 0) return;
+      if (Date.now() < blockInteractiveUntil) return;
+
+      blockInteractiveUntil = Date.now() + 850;
+      pageFlip.flip(1); // Abre explícitamente a la Página 1 (Índice)
       audioController.playFlipSound();
-    });
+    };
+
+    startBtn.addEventListener('click', handleStartBook);
+    startBtn.addEventListener('touchend', handleStartBook);
   }
 
   // 8. Enlaces dentro del índice
   document.querySelectorAll('.toc-container .chapter-item-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    const handleChapterClick = (e) => {
+      e.preventDefault();
       e.stopPropagation();
+
+      // Si el libro todavía se está abriendo desde la portada o animando, ignorar clics fantasma
+      if (Date.now() < blockInteractiveUntil) return;
+      const current = pageFlip.getCurrentPageIndex();
+      if (current === 0) return;
+
       const target = parseInt(btn.getAttribute('data-target-page'), 10);
-      if (target) {
-        pageFlip.flip(target);
+      if (target && target !== current) {
+        safeFlipTo(target);
+        audioController.playFlipSound();
       }
-    });
+    };
+
+    btn.addEventListener('click', handleChapterClick);
   });
 
   // 9. Fotos ampliables con Lightbox
@@ -221,15 +265,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 10. Botones de pasar página
   if (prevBtn) {
-    prevBtn.addEventListener('click', () => pageFlip.flipPrev());
+    prevBtn.addEventListener('click', () => safeFlipPrev());
   }
   if (nextBtn) {
-    nextBtn.addEventListener('click', () => pageFlip.flipNext());
+    nextBtn.addEventListener('click', () => safeFlipNext());
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') pageFlip.flipNext();
-    if (e.key === 'ArrowLeft') pageFlip.flipPrev();
+    if (e.key === 'ArrowRight') safeFlipNext();
+    if (e.key === 'ArrowLeft') safeFlipPrev();
   });
 
   // 11. Control de la canción en la barra inferior
