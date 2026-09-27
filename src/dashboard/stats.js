@@ -725,8 +725,10 @@ class AppleStatsDashboard {
     if (this.musicStatusPill) {
       if (musicPlays > 0) {
         this.musicStatusPill.textContent = 'Reproducida en el libro';
-        this.musicStatusPill.style.background = 'rgba(48, 209, 88, 0.2)';
-        this.musicStatusPill.style.color = '#a7f3d0';
+        this.musicStatusPill.style.background = 'rgba(255, 255, 255, 0.16)';
+        this.musicStatusPill.style.border = '1px solid rgba(255, 255, 255, 0.35)';
+        this.musicStatusPill.style.color = '#ffffff';
+        this.musicStatusPill.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
       } else {
         this.musicStatusPill.textContent = 'No reproducida aún';
       }
@@ -808,7 +810,7 @@ class AppleStatsDashboard {
         <div class="timeline-session-card">
           <div class="timeline-card-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="timeline-badge" style="${isLau ? '' : 'background: rgba(255,159,10,0.18); border-color: rgba(255,159,10,0.4); color: #fed7aa;'}">
+              <span class="timeline-badge" style="${isLau ? 'background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.35); color: #ffffff; box-shadow: 0 0 10px rgba(255,255,255,0.15);' : 'background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); color: #cbd5e1;'}">
                 ${isLau ? '👩 Lau' : '👤 Otro Visitante'}
               </span>
               <span class="timeline-badge" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #fff;">
@@ -830,7 +832,7 @@ class AppleStatsDashboard {
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Tiempo de Lectura</span>
-              <span class="tl-item-val" style="color: var(--apple-gold);">${this.formatDuration(s.totalSeconds)}</span>
+              <span class="tl-item-val" style="color: #ffffff; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.3);">${this.formatDuration(s.totalSeconds)}</span>
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Página Máxima</span>
@@ -916,7 +918,8 @@ class AppleStatsDashboard {
     localStorage.setItem(analyticsConfig.storageKeys.remoteConfig, JSON.stringify(newConfig));
 
     if (this.settingsNotice) {
-      this.settingsNotice.style.color = 'var(--apple-green)';
+      this.settingsNotice.style.color = '#ffffff';
+      this.settingsNotice.style.textShadow = '0 0 8px rgba(255, 255, 255, 0.4)';
       this.settingsNotice.textContent = '¡Ajustes guardados correctamente!';
     }
 
