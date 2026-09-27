@@ -194,8 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnOpenSpotifyDirect) {
     btnOpenSpotifyDirect.addEventListener('click', (e) => {
       e.stopPropagation();
-      e.preventDefault();
-      audioController.openSpotify();
     });
   }
 

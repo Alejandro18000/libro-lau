@@ -16,7 +16,7 @@ export const bookMetadata = {
     title: "invisible string",
     artist: "Taylor Swift",
     album: "folklore",
-    spotifyUrl: "https://open.spotify.com/track/6VsvKPJ4xjVNKjI8VVioNm",
+    spotifyUrl: "https://open.spotify.com/track/6VsvKPJ4xjVNKpI8VVZ3SV",
     audioSrc: asset("audio/invisible_string.m4a"), // Canción completa (4:12)
     coverImg: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/7c/04/ba/7c04ba17-2ff8-21b3-0ac0-7d141f86e924/20UMGIM64216.rgb.jpg/300x300bb.jpg"
   }
