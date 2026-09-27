@@ -145,8 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5. Elementos de la interfaz
   const prevBtn = document.getElementById('btn-prev-page');
   const nextBtn = document.getElementById('btn-next-page');
-  const sidePrevBtn = document.getElementById('btn-side-prev');
-  const sideNextBtn = document.getElementById('btn-side-next');
   const pageIndicator = document.getElementById('page-indicator');
   const toggleMusicBtn = document.getElementById('btn-toggle-music');
   const openTocBtn = document.getElementById('btn-open-toc');
@@ -171,19 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (prevBtn) prevBtn.disabled = currentPage === 0;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages - 1;
-
-    // Chevrons laterales de navegación flotante
-    if (sidePrevBtn) {
-      const hidePrev = currentPage === 0;
-      sidePrevBtn.classList.toggle('hidden', hidePrev);
-      sidePrevBtn.disabled = hidePrev;
-    }
-    if (sideNextBtn) {
-      const hideNext = currentPage >= totalPages - 1;
-      sideNextBtn.classList.toggle('hidden', hideNext);
-      sideNextBtn.disabled = hideNext;
-      sideNextBtn.classList.toggle('pulsing', currentPage === 0);
-    }
   };
 
   const totalPages = pageFlip.getPageCount();
@@ -210,22 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-
-  // Conexión de chevrons laterales
-  if (sidePrevBtn) {
-    sidePrevBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dismissHint();
-      pageFlip.flipPrev();
-    });
-  }
-  if (sideNextBtn) {
-    sideNextBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dismissHint();
-      pageFlip.flipNext();
-    });
-  }
 
   // 7. Botón "Abrir el libro" en portada
   const startBtn = document.getElementById('btn-start-book');

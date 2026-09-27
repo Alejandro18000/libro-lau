@@ -779,69 +779,7 @@ body {
   pointer-events: auto;
 }
 
-/* Flechas laterales de navegación flotante */
-.nav-side-chevron {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(253, 250, 246, 0.92);
-  border: 1.5px solid rgba(197, 155, 63, 0.45);
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 50;
-  box-shadow: 0 6px 20px rgba(45, 25, 10, 0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.25s ease;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
 
-.nav-side-chevron.prev {
-  left: -58px;
-}
-
-.nav-side-chevron.next {
-  right: -58px;
-}
-
-.nav-side-chevron:hover {
-  background: #ffffff;
-  border-color: var(--gold-warm);
-  transform: translateY(-50%) scale(1.08);
-  box-shadow: 0 8px 25px rgba(197, 155, 63, 0.4);
-}
-
-.nav-side-chevron:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-.nav-side-chevron.hidden {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-}
-
-@keyframes pulse-chevron {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(197, 155, 63, 0.45);
-    transform: translateY(-50%) scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(197, 155, 63, 0);
-    transform: translateY(-50%) scale(1.06);
-  }
-}
-
-.nav-side-chevron.pulsing {
-  animation: pulse-chevron 2.2s infinite ease-in-out;
-}
 
 /* Píldora de guía de lectura inicial (Onboarding) */
 .reading-hint-pill {
@@ -1180,18 +1118,6 @@ body {
       0 6px 14px -4px rgba(0, 0, 0, 0.22);
   }
 
-  /* Chevrons laterales flotantes en móvil */
-  .nav-side-chevron {
-    width: 38px;
-    height: 38px;
-    background: rgba(253, 250, 246, 0.88);
-  }
-  .nav-side-chevron.prev {
-    left: 4px;
-  }
-  .nav-side-chevron.next {
-    right: 4px;
-  }
 
   /* Cubierta del libro en móviles */
   .cover-medallion-content {

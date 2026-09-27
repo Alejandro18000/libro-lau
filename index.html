@@ -16,24 +16,10 @@
   <canvas id="petals-canvas"></canvas>
 
   <div class="app-wrapper">
-    <!-- Escenario del Libro con flechas laterales flotantes de apoyo -->
+    <!-- Escenario del Libro (100% despejado y libre de iconos que tapen las letras) -->
     <main class="book-stage">
-      <!-- Flecha lateral flotante Anterior (Fuera de las páginas para no tapar texto) -->
-      <button class="nav-side-chevron prev hidden" id="btn-side-prev" aria-label="Página anterior" title="Página anterior">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-
       <!-- Libro Físico 3D (PageFlip) -->
       <div id="flipbook"></div>
-
-      <!-- Flecha lateral flotante Siguiente (Con pulso dorado sutil en portada) -->
-      <button class="nav-side-chevron next pulsing" id="btn-side-next" aria-label="Página siguiente" title="Página siguiente">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
     </main>
 
     <!-- Píldora de guía inicial (Informa de forma intuitiva cómo hojear y se desvanece sola) -->
