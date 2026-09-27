@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Para Lau · 27 de Septiembre</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+  <meta name="description" content="Un libro para Lau · 27 de Septiembre">
+</head>
+<body>
+
+  <!-- Lienzo de pétalos sutiles -->
+  <canvas id="petals-canvas"></canvas>
+
+  <div class="app-wrapper">
+    <!-- Escenario del Libro (Páginas 100% limpias, sin iconos flotantes que tapen las letras) -->
+    <main class="book-stage">
+      <!-- Libro Físico 3D (PageFlip) -->
+      <div id="flipbook"></div>
+    </main>
+
+    <!-- Barra de Navegación y Lectura Esencial -->
+    <footer class="bottom-control-bar">
+      <!-- 1. Botón Anterior -->
+      <button class="nav-btn-action" id="btn-prev-page" title="Página Anterior">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span class="nav-btn-text">Anterior</span>
+      </button>
+
+      <!-- 2. Botón Índice de Capítulos -->
+      <button class="nav-btn-action nav-btn-secondary" id="btn-open-toc" title="Índice de Capítulos">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span class="nav-btn-text">Índice</span>
+      </button>
+
+      <!-- 3. Indicador de Página Central -->
+      <div class="page-indicator-badge" id="page-indicator" title="Clic para abrir el índice de capítulos">
+        Portada
+      </div>
+
+      <!-- 4. Control de la canción 'invisible string' -->
+      <button class="nav-btn-action nav-btn-music" id="btn-toggle-music" title="Reproducir 'invisible string' (Taylor Swift)">
+        <span class="music-play-icon" id="music-bar-icon">▶</span>
+        <span class="nav-btn-text">invisible string</span>
+      </button>
+
+      <!-- 5. Botón Siguiente -->
+      <button class="nav-btn-action" id="btn-next-page" title="Página Siguiente">
+        <span class="nav-btn-text">Siguiente</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- 6. Pantalla Completa Inmersiva -->
+      <button class="nav-btn-icon" id="btn-toggle-fullscreen" title="Pantalla Completa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

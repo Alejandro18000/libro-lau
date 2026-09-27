@@ -1,0 +1,845 @@
+/* ==========================================================================
+   DISEÑO EN ACUARELA CON LOMO DE CUERO ANTIGUO ESTILO COREANO: "PARA LAU"
+   Encuadernación tradicional de lujo, cuero curtido, relieves dorados y acuarela.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-desk: #2b1f18;
+  --paper-wc: #fcfaf6;
+  --paper-edge: #eee7db;
+  --text-primary: #2d2429;
+  --text-muted: #665a62;
+  --gold-warm: #c59b3f;
+  --gold-glow: rgba(197, 155, 63, 0.4);
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-handwriting: 'Caveat', cursive;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   ENTORNO FUERA DEL LIBRO: MESA DE ARTISTA ILUMINADA
+   ========================================================================== */
+
+body {
+  background-color: #d8c8b6;
+  background-image: 
+    linear-gradient(rgba(250, 245, 238, 0.05), rgba(35, 20, 12, 0.22)),
+    url('../images/watercolor/ambient_desk.jpg');
+  background-size: cover;
+  background-position: center 65%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+#petals-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.app-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  z-index: 20;
+}
+
+/* ==========================================================================
+   ESCENARIO DEL LIBRO & LOMO DE CUERO EXTERIOR
+   ========================================================================== */
+
+.book-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1150px;
+  margin: auto;
+  perspective: 2500px;
+}
+
+
+
+
+
+/* ==========================================================================
+   ESTRUCTURA DEL LIBRO & PÁGINAS
+   ========================================================================== */
+
+#flipbook {
+  position: relative;
+  z-index: 30;
+  box-shadow: 
+    0 32px 65px -15px rgba(50, 25, 10, 0.5),
+    0 12px 25px -5px rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+.page {
+  position: relative;
+  background-color: var(--paper-wc);
+  background-image: 
+    radial-gradient(#e8dfd3 0.6px, transparent 0.6px),
+    linear-gradient(to right, rgba(0,0,0,0.04) 0%, transparent 6%, transparent 94%, rgba(0,0,0,0.04) 100%);
+  background-size: 20px 20px, 100% 100%;
+  overflow: hidden;
+  box-shadow: inset 0 0 35px rgba(190, 170, 145, 0.15);
+}
+
+/* Pliegue central del libro cuando está abierto (Spine Gutter) */
+.page.--left {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  box-shadow: 
+    inset -16px 0 25px -8px rgba(50, 30, 15, 0.25),
+    inset 0 0 30px rgba(190, 170, 145, 0.15);
+}
+
+.page.--right {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  box-shadow: 
+    inset 16px 0 25px -8px rgba(50, 30, 15, 0.25),
+    inset 0 0 30px rgba(190, 170, 145, 0.15);
+}
+
+/* Hendidura de costura y lomo en el centro interior */
+.page.--left::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  background: linear-gradient(to left, rgba(40, 20, 10, 0.35) 0%, rgba(60, 35, 18, 0.1) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.page.--right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 14px;
+  background: linear-gradient(to right, rgba(40, 20, 10, 0.35) 0%, rgba(60, 35, 18, 0.1) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Evitar que las sombras de pliegue de papel aparezcan sobre las cubiertas rígidas */
+.page-cover::before,
+.page-cover::after {
+  display: none !important;
+}
+
+/* ==========================================================================
+   PORTADA Y CONTRATAPA: ENCUADERNACIÓN INTEGRAL EN CUERO ANTIGUO COREANO
+   (FULL ANTIQUE KOREAN LEATHER HARDCOVER WITH GOLD EMBOSSING & SPINE RIBS)
+   ========================================================================== */
+
+.page-cover {
+  position: relative;
+  overflow: hidden;
+  background-color: #21130b !important;
+  box-shadow: 
+    inset 0 0 50px rgba(0, 0, 0, 0.75),
+    0 25px 50px rgba(25, 12, 6, 0.6) !important;
+  border-radius: 6px;
+}
+
+/* Placa completa de encuadernación en cuero con lomo y filigrana */
+.cover-antique-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../images/korean_book_cover_front.jpg');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cover-antique-bg.back {
+  background-image: url('../images/korean_book_cover_back.jpg');
+}
+
+/* Contenedor alineado con el medallón de loto tradicional */
+.cover-medallion-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-left: 40px; /* Compensación óptica para centrar en el medallón */
+  padding-top: 22px;
+}
+
+.cover-medallion-content.back {
+  padding-left: 0;
+  padding-right: 40px;
+  padding-top: 22px;
+}
+
+/* Insignia dorada interior */
+.cover-gold-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 220px;
+  height: 180px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* Título en pan de oro repujado */
+.cover-gold-title {
+  font-family: var(--font-serif);
+  font-size: 2.35rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: none;
+  line-height: 1.15;
+  margin: 0;
+  background: linear-gradient(135deg, #fff7db 0%, #ecd078 25%, #d4af37 55%, #f6e27a 75%, #aa7c11 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 12px rgba(212, 175, 55, 0.45));
+}
+
+/* Separador dorado sutil */
+.cover-gold-divider {
+  width: 52px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.9) 50%, transparent 100%);
+  margin: 8px 0;
+}
+
+/* Subtítulo en pan de oro */
+.cover-gold-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-style: italic;
+  letter-spacing: 2px;
+  margin: 0;
+  background: linear-gradient(135deg, #fff2cc 0%, #d4af37 60%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.9));
+}
+
+/* Botón elegante de apertura en la portada */
+.btn-open-book {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  margin-top: 26px;
+  background: linear-gradient(135deg, rgba(32, 16, 9, 0.9) 0%, rgba(18, 9, 4, 0.95) 100%);
+  color: #f7e7b4;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: 1.5px solid rgba(212, 175, 55, 0.85);
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 
+    0 5px 20px rgba(0, 0, 0, 0.65),
+    inset 0 1px 2px rgba(255, 230, 160, 0.35);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.btn-open-book:hover {
+  background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+  color: #1a0e06;
+  border-color: #fff2cc;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 
+    0 8px 25px rgba(212, 175, 55, 0.55),
+    inset 0 1px 3px rgba(255, 255, 255, 0.7);
+}
+
+/* ==========================================================================
+   MAQUETACIÓN INTERIOR EN ACUARELA (ILUSTRACIONES INTEGRADAS)
+   ========================================================================== */
+
+.page-content-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 38px 34px 24px;
+  position: relative;
+}
+
+.page-header-minimal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(190, 170, 145, 0.3);
+  padding-bottom: 6px;
+  margin-bottom: 18px;
+}
+
+.page-header-title {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #7a6a73;
+}
+
+.page-footer-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(190, 170, 145, 0.25);
+}
+
+.page-num-text {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  color: #8c7c85;
+}
+
+/* Tipografía de la carta */
+.letter-title {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #3b2832;
+  margin-bottom: 16px;
+  line-height: 1.25;
+}
+
+.letter-paragraph {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.82;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  text-align: justify;
+}
+
+/* Ilustraciones en Acuarela Integradas Directamente en la Hoja */
+.watercolor-spot-art {
+  display: block;
+  margin: 12px auto;
+  max-width: 170px;
+  max-height: 170px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  filter: saturate(1.05) contrast(1.02);
+}
+
+.watercolor-spot-art.wide {
+  max-width: 260px;
+  max-height: 140px;
+}
+
+/* Fotografías Limpias */
+.clean-photo-frame {
+  background: #ffffff;
+  padding: 8px 8px 18px 8px;
+  box-shadow: 0 4px 16px rgba(60, 45, 30, 0.1);
+  border-radius: 2px;
+  margin: 10px auto;
+  max-width: 90%;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(220, 205, 185, 0.4);
+}
+
+.clean-photo-frame:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(60, 45, 30, 0.18);
+}
+
+.clean-photo-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 1px;
+  display: block;
+}
+
+.clean-photo-caption {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #6a5c64;
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* Reproductor de música en acuarela */
+.music-card-watercolor {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(197, 155, 63, 0.35);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 10px;
+  box-shadow: 0 4px 16px rgba(70, 50, 30, 0.06);
+}
+
+.music-player-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.album-cover-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.song-info {
+  flex-grow: 1;
+}
+
+.song-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3b2832;
+}
+
+.song-artist {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: #7a6a73;
+}
+
+.player-controls-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-play-pause-track {
+  background: var(--gold-warm);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-play-pause-track:hover {
+  background: #b08731;
+  transform: scale(1.08);
+}
+
+.progress-container {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar-bg {
+  flex-grow: 1;
+  height: 5px;
+  background: #e5ded3;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gold-warm);
+  border-radius: 3px;
+}
+
+.time-display {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: #7a6a73;
+  min-width: 65px;
+  text-align: right;
+}
+
+.spotify-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #1DB954;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(29, 185, 84, 0.25);
+  margin-top: 8px;
+}
+
+.spotify-btn-action:hover {
+  background: #1ed760;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4);
+}
+
+/* ==========================================================================
+   BARRA DE LECTURA Y CONTROL ESENCIAL (FUNCIONAL Y REFINADA)
+   ========================================================================== */
+
+.bottom-control-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(253, 250, 246, 0.94);
+  border: 1px solid rgba(197, 155, 63, 0.45);
+  border-radius: 35px;
+  backdrop-filter: blur(14px);
+  box-shadow: 
+    0 10px 30px rgba(50, 30, 15, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 14px;
+  z-index: 40;
+  max-width: 95vw;
+}
+
+/* Botones de acción principales en la barra */
+.nav-btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(197, 155, 63, 0.35);
+  border-radius: 20px;
+  color: #3e2e36;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.nav-btn-action:hover:not(:disabled) {
+  background: var(--gold-warm);
+  border-color: var(--gold-warm);
+  color: #ffffff;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px rgba(197, 155, 63, 0.35);
+}
+
+.nav-btn-action:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nav-btn-action:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+  border-color: rgba(197, 155, 63, 0.15);
+}
+
+/* Botón secundario para Índice */
+.nav-btn-action.nav-btn-secondary {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(197, 155, 63, 0.25);
+  color: #55444e;
+}
+
+.nav-btn-action.nav-btn-secondary:hover {
+  background: var(--gold-warm);
+  color: #ffffff;
+  border-color: var(--gold-warm);
+}
+
+/* Indicador central de número de página */
+.page-indicator-badge {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #3b2832;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  background: rgba(197, 155, 63, 0.08);
+  border-radius: 16px;
+  border: 1px solid rgba(197, 155, 63, 0.22);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.page-indicator-badge:hover {
+  background: rgba(197, 155, 63, 0.18);
+  border-color: var(--gold-warm);
+  color: #1a0e06;
+}
+
+/* Botón de control de la canción 'invisible string' */
+.nav-btn-action.nav-btn-music {
+  background: linear-gradient(135deg, rgba(253, 246, 235, 0.95), rgba(246, 236, 222, 0.98));
+  border: 1px solid rgba(197, 155, 63, 0.5);
+  color: #43313a;
+  gap: 8px;
+}
+
+.nav-btn-action.nav-btn-music .music-play-icon {
+  font-size: 0.72rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold-warm);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nav-btn-action.nav-btn-music.playing {
+  background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+  color: #ffffff;
+  border-color: #ffd700;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.45);
+}
+
+.nav-btn-action.nav-btn-music.playing .music-play-icon {
+  background: #ffffff;
+  color: #aa7c11;
+}
+
+/* Botón circular auxiliar (Pantalla completa) */
+.nav-btn-icon {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(197, 155, 63, 0.35);
+  color: #4a3c44;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.nav-btn-icon:hover {
+  background: var(--gold-warm);
+  color: #ffffff;
+  border-color: var(--gold-warm);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(197, 155, 63, 0.3);
+}
+
+.nav-btn-icon.active {
+  background: var(--gold-warm);
+  color: #ffffff;
+  border-color: var(--gold-warm);
+}
+
+/* Lightbox Modal */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 15, 0.92);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.lightbox-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+
+.lightbox-caption {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-style: italic;
+  color: #f7edf2;
+  margin-top: 15px;
+}
+
+/* Modal del Índice de Capítulos */
+.chapters-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 15, 0.78);
+  backdrop-filter: blur(8px);
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.chapters-modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chapters-modal-box {
+  position: relative;
+  background: var(--paper-wc);
+  background-image: 
+    radial-gradient(#e8dfd3 0.6px, transparent 0.6px);
+  background-size: 20px 20px;
+  border: 1px solid rgba(197, 155, 63, 0.45);
+  border-radius: 12px;
+  max-width: 440px;
+  width: 100%;
+  padding: 32px 26px 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.chapters-modal-title {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  color: #3b2832;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.chapters-modal-box .chapter-item-btn {
+  transition: all 0.25s ease;
+}
+
+.chapters-modal-box .chapter-item-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-warm) !important;
+  box-shadow: 0 4px 12px rgba(197, 155, 63, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-content-wrapper {
+    padding: 22px 18px 16px;
+  }
+  .clean-photo-img {
+    height: 165px;
+  }
+  .letter-title {
+    font-size: 1.4rem;
+  }
+  .letter-paragraph {
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+  .cover-gold-title {
+    font-size: 1.95rem;
+  }
+  .bottom-control-bar {
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 28px;
+  }
+  .nav-btn-action {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+  .page-indicator-badge {
+    font-size: 0.92rem;
+    padding: 5px 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .nav-btn-music .nav-btn-text,
+  .nav-btn-secondary .nav-btn-text {
+    display: none;
+  }
+  .bottom-control-bar {
+    gap: 5px;
+    padding: 4px 8px;
+  }
+  .nav-btn-action {
+    padding: 6px 10px;
+  }
+}
