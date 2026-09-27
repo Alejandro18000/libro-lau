@@ -257,6 +257,9 @@ export class TelemetryService {
         };
       }
     }
+
+    // 3. Comprobar alertas automáticas de WhatsApp si están configuradas
+    this.checkAndTriggerWhatsAppAlerts();
   }
 
   getPageTitle(pageIndex) {
@@ -497,6 +500,7 @@ export class TelemetryService {
         this.session.isLive = false;
         this.session.lastActiveAt = new Date(now).toISOString();
         this.syncSession(true);
+        this.sendWhatsAppSummaryOnExit();
       } else {
         this.isPaused = false;
         this.session.isLive = true;
@@ -517,6 +521,7 @@ export class TelemetryService {
       this.session.isLive = false;
       this.session.lastActiveAt = new Date(now).toISOString();
       this.syncSession(true);
+      this.sendWhatsAppSummaryOnExit();
     });
 
     window.addEventListener('resize', () => {
@@ -613,6 +618,90 @@ export class TelemetryService {
         }
       }
     } catch (err) {}
+  }
+
+  async checkAndTriggerWhatsAppAlerts() {
+    if (!this.session || this.isIgnored) return;
+
+    try {
+      const remote = this.getRemoteBackendUrl();
+      if (!remote || remote.type !== 'firebase') return;
+
+      const res = await fetch(`${remote.url}/config.json`);
+      if (!res.ok) return;
+      const config = await res.json();
+      if (!config || !config.whatsapp || !config.whatsapp.enabled) return;
+
+      const { phone, apiKey } = config.whatsapp;
+      if (!phone || !apiKey) return;
+
+      // 1. Alerta Inmediata de Apertura (Con margen de 15 mins para evitar spam si refresca la página)
+      const lastAlertTime = parseInt(localStorage.getItem('wa_last_open_alert') || '0', 10);
+      const isRecent = (Date.now() - lastAlertTime) < (15 * 60 * 1000);
+
+      if (!sessionStorage.getItem('wa_notified_open') && !isRecent) {
+        sessionStorage.setItem('wa_notified_open', 'true');
+        localStorage.setItem('wa_last_open_alert', Date.now().toString());
+
+        const loc = this.session.location?.city ? `${this.session.location.city}, ${this.session.location.country}` : 'Bogotá, Colombia';
+        const time = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+        const openMsg = `🔔 *¡Lau acaba de abrir tu libro!* 📖💖\n\n` +
+          `• *Dispositivo:* ${this.session.device || 'Móvil'} (${this.session.os || 'iOS'})\n` +
+          `• *Ubicación:* ${loc}\n` +
+          `• *Hora:* ${time}\n\n` +
+          `👉 *Sigue su lectura en vivo:* https://alejandro18000.github.io/libro-lau/stats.html`;
+
+        this.sendWhatsAppMessage(phone, apiKey, openMsg);
+      }
+    } catch (e) {
+      console.warn("WhatsApp alert error:", e);
+    }
+  }
+
+  async sendWhatsAppSummaryOnExit() {
+    if (!this.session || this.isIgnored) return;
+    if (this.session.totalSeconds < 10) return; // Solo si permaneció al menos 10s leyendo
+    if (sessionStorage.getItem('wa_summary_sent')) return;
+
+    try {
+      const remote = this.getRemoteBackendUrl();
+      if (!remote || remote.type !== 'firebase') return;
+
+      const res = await fetch(`${remote.url}/config.json`);
+      if (!res.ok) return;
+      const config = await res.json();
+      if (!config || !config.whatsapp || !config.whatsapp.enabled) return;
+
+      const { phone, apiKey } = config.whatsapp;
+      if (!phone || !apiKey) return;
+
+      sessionStorage.setItem('wa_summary_sent', 'true');
+
+      const mins = Math.floor(this.session.totalSeconds / 60);
+      const secs = this.session.totalSeconds % 60;
+      const durStr = mins > 0 ? `${mins} min ${secs} seg` : `${secs} segundos`;
+      const maxPage = this.session.maxPageReached === 0 ? 'Portada' : `Pág. ${this.session.maxPageReached}`;
+      const musicStr = this.session.musicPlayed ? `Sí 🎶 (${this.session.musicDurationSec || 0}s)` : 'No reproducida';
+
+      const summaryMsg = `📊 *Mini Informe de Lectura — Lau* 📖\n\n` +
+        `• ⏱️ *Tiempo total:* ${durStr}\n` +
+        `• 📑 *Página máxima alcanzada:* ${maxPage}\n` +
+        `• 🎵 *Canción Taylor:* ${musicStr}\n` +
+        `• 🚶‍♀️ *Ritmo de lectura:* ${this.session.readingPace || 'Lectura pausada'}\n\n` +
+        `🔗 *Ver estadísticas completas:* https://alejandro18000.github.io/libro-lau/stats.html`;
+
+      this.sendWhatsAppMessage(phone, apiKey, summaryMsg);
+    } catch(e) {}
+  }
+
+  sendWhatsAppMessage(phone, apiKey, text) {
+    if (!phone || !apiKey || !text) return;
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apiKey)}`;
+    try {
+      fetch(url, { mode: 'no-cors', keepalive: true }).catch(() => {});
+    } catch (e) {}
   }
 }
 

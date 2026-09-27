@@ -471,6 +471,34 @@
           <span class="field-help">Código numérico para desbloquear este panel.</span>
         </div>
 
+        <!-- Notificaciones Automáticas a WhatsApp (CallMeBot) -->
+        <div class="field-group" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--glass-border-subtle);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label class="field-label" style="color: #25D366; display: flex; align-items: center; gap: 6px; margin: 0;">
+              <span>📲 Alertas Automáticas a tu WhatsApp:</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; color: #fff;">
+              <input type="checkbox" id="check-whatsapp-enabled" style="accent-color: #25D366; width: 16px; height: 16px;">
+              <span>Activar</span>
+            </label>
+          </div>
+          <span class="field-help" style="margin-bottom: 10px; display: block;">Te envía una alerta inmediata y un mini informe a tu celular cada vez que Lau abra el libro.</span>
+
+          <label class="field-label" style="font-size: 0.8rem;">Tu número de WhatsApp (con indicativo, ej: +573001234567):</label>
+          <input class="glass-input" id="input-wa-phone" type="tel" placeholder="+573001234567" style="margin-bottom: 8px;">
+
+          <label class="field-label" style="font-size: 0.8rem;">API Key de CallMeBot (Gratis):</label>
+          <div style="display: flex; gap: 8px;">
+            <input class="glass-input" id="input-wa-apikey" type="text" placeholder="Ej: 1234567" style="flex: 1;">
+            <button class="glass-btn" id="btn-test-wa" type="button" style="white-space: nowrap; font-size: 0.8rem; background: rgba(37, 211, 102, 0.18); border-color: rgba(37, 211, 102, 0.4); color: #4ade80;">
+              🧪 Probar
+            </button>
+          </div>
+          <span class="field-help" style="margin-top: 6px; display: block; font-size: 0.75rem;">
+            👉 ¿Cómo obtener tu API Key en 10 segundos? Envía un WhatsApp con el texto <em>I allow callmebot to send me messages</em> al <strong>+34 644 44 47 04</strong> y te responderá con tu clave.
+          </span>
+        </div>
+
         <div class="field-group" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--glass-border-subtle);">
           <label class="field-label" style="color: var(--apple-rose);">Limpieza de Datos de Prueba:</label>
           <button class="glass-btn" id="btn-purge-all" style="background: rgba(255, 55, 95, 0.15); border: 1px solid rgba(255, 55, 95, 0.4); color: #fda4af; width: 100%;">

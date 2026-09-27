@@ -149,6 +149,10 @@ class AppleStatsDashboard {
     this.settingsModal = document.getElementById('settings-modal');
     this.inputFirebase = document.getElementById('input-firebase-url');
     this.inputPin = document.getElementById('input-custom-pin');
+    this.checkWhatsAppEnabled = document.getElementById('check-whatsapp-enabled');
+    this.inputWaPhone = document.getElementById('input-wa-phone');
+    this.inputWaApiKey = document.getElementById('input-wa-apikey');
+    this.btnTestWa = document.getElementById('btn-test-wa');
     this.btnSaveSettings = document.getElementById('btn-save-settings');
     this.btnCancelSettings = document.getElementById('btn-cancel-settings');
     this.btnCloseSettings = document.getElementById('btn-close-settings');
@@ -227,6 +231,10 @@ class AppleStatsDashboard {
 
     if (this.btnSaveSettings) {
       this.btnSaveSettings.addEventListener('click', () => this.saveSettings());
+    }
+
+    if (this.btnTestWa) {
+      this.btnTestWa.addEventListener('click', () => this.testWhatsAppNotification());
     }
 
     if (this.btnPurgeAll) {
@@ -1010,32 +1018,101 @@ class AppleStatsDashboard {
     }
   }
 
-  openSettings() {
+  async openSettings() {
     const cfg = this.getRemoteConfig();
-    if (this.inputFirebase) this.inputFirebase.value = cfg.firebaseUrl || '';
+    if (this.inputFirebase) this.inputFirebase.value = cfg.firebaseUrl || 'https://libro-lau-default-rtdb.firebaseio.com';
     if (this.inputPin) this.inputPin.value = cfg.customPin || '2709';
+    if (this.checkWhatsAppEnabled) this.checkWhatsAppEnabled.checked = !!cfg.whatsapp?.enabled;
+    if (this.inputWaPhone) this.inputWaPhone.value = cfg.whatsapp?.phone || '';
+    if (this.inputWaApiKey) this.inputWaApiKey.value = cfg.whatsapp?.apiKey || '';
     if (this.settingsNotice) this.settingsNotice.textContent = '';
     if (this.settingsModal) this.settingsModal.classList.add('active');
+
+    // Intentar sincronizar última configuración de Firebase
+    try {
+      const remoteUrl = (cfg.firebaseUrl || 'https://libro-lau-default-rtdb.firebaseio.com').replace(/\/$/, '');
+      const res = await fetch(`${remoteUrl}/config.json`);
+      if (res.ok) {
+        const remoteCfg = await res.json();
+        if (remoteCfg && remoteCfg.whatsapp) {
+          if (this.checkWhatsAppEnabled) this.checkWhatsAppEnabled.checked = !!remoteCfg.whatsapp.enabled;
+          if (this.inputWaPhone && !this.inputWaPhone.value) this.inputWaPhone.value = remoteCfg.whatsapp.phone || '';
+          if (this.inputWaApiKey && !this.inputWaApiKey.value) this.inputWaApiKey.value = remoteCfg.whatsapp.apiKey || '';
+        }
+      }
+    } catch(e) {}
   }
 
   closeSettings() {
     if (this.settingsModal) this.settingsModal.classList.remove('active');
   }
 
-  saveSettings() {
-    const firebaseUrl = (this.inputFirebase?.value || '').trim();
+  async testWhatsAppNotification() {
+    const phone = (this.inputWaPhone?.value || '').trim();
+    const apiKey = (this.inputWaApiKey?.value || '').trim();
+
+    if (!phone || !apiKey) {
+      alert("Por favor ingresa tu número de WhatsApp con indicativo (+57...) y tu API Key de CallMeBot para enviar la prueba.");
+      return;
+    }
+
+    if (this.settingsNotice) {
+      this.settingsNotice.style.color = '#38bdf8';
+      this.settingsNotice.textContent = 'Enviando mensaje de prueba a tu WhatsApp...';
+    }
+
+    const testMsg = "✅ *¡Conexión Exitosa con el Libro de Lau!*\n\nTu WhatsApp está vinculado correctamente. A partir de ahora recibirás una alerta y un mini informe cada vez que Lau abra y lea el libro. 📖💖";
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(testMsg)}&apikey=${encodeURIComponent(apiKey)}`;
+
+    try {
+      await fetch(url, { mode: 'no-cors' });
+      if (this.settingsNotice) {
+        this.settingsNotice.style.color = 'var(--apple-green)';
+        this.settingsNotice.textContent = '✅ ¡Mensaje de prueba enviado! Revisa tu WhatsApp en unos segundos.';
+      }
+    } catch(err) {
+      if (this.settingsNotice) {
+        this.settingsNotice.style.color = 'var(--apple-rose)';
+        this.settingsNotice.textContent = 'Error al enviar: ' + err.message;
+      }
+    }
+  }
+
+  async saveSettings() {
+    const firebaseUrl = (this.inputFirebase?.value || '').trim() || 'https://libro-lau-default-rtdb.firebaseio.com';
     const customPin = (this.inputPin?.value || '').trim() || '2709';
+    const waEnabled = !!this.checkWhatsAppEnabled?.checked;
+    const waPhone = (this.inputWaPhone?.value || '').trim();
+    const waApiKey = (this.inputWaApiKey?.value || '').trim();
 
     const newConfig = {
       firebaseUrl,
-      customPin
+      customPin,
+      whatsapp: {
+        enabled: waEnabled,
+        phone: waPhone,
+        apiKey: waApiKey
+      }
     };
 
     localStorage.setItem(analyticsConfig.storageKeys.remoteConfig, JSON.stringify(newConfig));
 
+    // Guardar en Firebase para que el libro de Lau lo use al ejecutarse en su teléfono
+    try {
+      const remoteUrl = firebaseUrl.replace(/\/$/, '');
+      await fetch(`${remoteUrl}/config.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig)
+      });
+    } catch (e) {
+      console.warn("No se pudo sincronizar config en Firebase:", e);
+    }
+
     if (this.settingsNotice) {
       this.settingsNotice.style.color = 'var(--apple-green)';
-      this.settingsNotice.textContent = '¡Ajustes guardados correctamente!';
+      this.settingsNotice.textContent = '¡Ajustes y alertas guardados correctamente!';
     }
 
     setTimeout(() => {
