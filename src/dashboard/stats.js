@@ -82,6 +82,8 @@ class AppleStatsDashboard {
 
     // Acciones del Header
     this.btnRefresh = document.getElementById('btn-refresh');
+    this.btnWhatsApp = document.getElementById('btn-whatsapp');
+    this.btnBannerWhatsApp = document.getElementById('btn-banner-whatsapp');
     this.btnSettings = document.getElementById('btn-settings');
     this.btnLock = document.getElementById('btn-lock');
     this.chipCreatorMode = document.getElementById('chip-creator-mode');
@@ -204,6 +206,14 @@ class AppleStatsDashboard {
       this.btnLock.addEventListener('click', () => this.lockDashboard());
     }
 
+    if (this.btnWhatsApp) {
+      this.btnWhatsApp.addEventListener('click', () => this.shareToWhatsApp());
+    }
+
+    if (this.btnBannerWhatsApp) {
+      this.btnBannerWhatsApp.addEventListener('click', () => this.shareToWhatsApp());
+    }
+
     if (this.btnSettings) {
       this.btnSettings.addEventListener('click', () => this.openSettings());
     }
@@ -222,6 +232,64 @@ class AppleStatsDashboard {
     if (this.btnPurgeAll) {
       this.btnPurgeAll.addEventListener('click', () => this.purgeAllTestSessions());
     }
+  }
+
+  shareToWhatsApp() {
+    const sessions = this.sessions || [];
+    if (sessions.length === 0) {
+      alert("Aún no hay lecturas registradas para generar el reporte.");
+      return;
+    }
+
+    const latest = sessions[0];
+    const isLau = latest.device === 'iPhone' || !latest.isIgnored;
+
+    // Formatear fecha y hora
+    const dateObj = new Date(latest.startedAt || latest.lastActiveAt);
+    const dateStr = dateObj.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeStr = dateObj.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+    // Tiempo total
+    const mins = Math.floor((latest.totalSeconds || 0) / 60);
+    const secs = (latest.totalSeconds || 0) % 60;
+    const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs} segundos`;
+
+    // Ubicación
+    const city = latest.location?.city || 'Bogotá';
+    const country = latest.location?.country || 'Colombia';
+    const locStr = `${city}, ${country}`;
+
+    // Dispositivo
+    const deviceStr = `${latest.device || 'Móvil'} (${latest.os || 'iOS'})`;
+
+    // Página
+    const pageTitle = latest.activePageTitle || (latest.activePage === 0 ? 'Portada' : `Pág. ${latest.activePage}`);
+    const maxPageStr = latest.maxPageReached === 0 ? 'Portada' : `Pág. ${latest.maxPageReached}`;
+
+    const report = [
+      `*📊 REPORTE DE TELEMETRÍA — LIBRO PARA LAU*`,
+      `_Fecha: ${dateStr} • ${timeStr}_`,
+      ``,
+      `📱 *Visitante Detectado:*`,
+      `• *Identidad:* ${isLau ? '💖 Probablemente Lau' : '👤 Visitante anónimo'}`,
+      `• *Dispositivo:* ${deviceStr}`,
+      `• *Navegador:* ${latest.browser || 'Safari'} (${latest.colorScheme || 'Modo Oscuro'})`,
+      `• *Ubicación:* ${locStr} 🇨🇴`,
+      `• *N.º de Visita:* Visita ${latest.visitNumber || 1}`,
+      ``,
+      `⏱️ *Actividad y Lectura:*`,
+      `• *Última página vista:* ${pageTitle}`,
+      `• *Avance máximo:* ${maxPageStr}`,
+      `• *Tiempo de lectura:* ${durationStr}`,
+      `• *Música invisible string:* ${latest.musicPlayed ? 'Reproducida 🎶 (' + (latest.musicDurationSec || 0) + 's)' : 'Aún no reproducida'}`,
+      `• *Ritmo:* ${latest.readingPace || 'Comenzando a ojear'}`,
+      ``,
+      `🛡️ *Tu equipo está 100% excluido.*`,
+      `🔗 *Panel en vivo:* https://alejandro18000.github.io/libro-lau/stats.html`
+    ].join('\n');
+
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(report)}`;
+    window.open(waUrl, '_blank');
   }
 
   switchTab(targetTabId) {
