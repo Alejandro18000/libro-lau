@@ -12,6 +12,7 @@ import { AudioController } from './components/AudioController.js';
 import { BookRenderer } from './components/BookRenderer.js';
 import { Lightbox } from './components/Lightbox.js';
 import { ChaptersModal } from './components/ChaptersModal.js';
+import { telemetry } from './services/TelemetryService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Inicializar auxiliares
@@ -163,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageIndex = e.data;
     audioController.playFlipSound();
     updateNavigation(pageIndex, totalPages);
+    telemetry.onPageFlip(pageIndex, totalPages);
 
     // Revisar si la página visible actual es la página de la canción (Pág. 8)
     const activePages = [pageIndex, pageIndex + 1];
@@ -206,7 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
       const src = frame.getAttribute('data-full-img');
       const caption = frame.getAttribute('data-caption');
-      if (src) lightbox.open(src, caption);
+      if (src) {
+        lightbox.open(src, caption);
+        telemetry.onPhotoZoom(caption);
+      }
     });
   });
 
@@ -284,6 +289,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   audioController.onStateChange((state) => {
+    if (state.isPlaying) {
+      telemetry.onMusicPlay();
+    }
     if (btnTrackPlay) {
       btnTrackPlay.textContent = state.isPlaying ? '⏸' : '▶';
     }
@@ -296,7 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  audioController.onTimeUpdate(({ percent, formattedCurrent, formattedDuration }) => {
+  audioController.onTimeUpdate(({ current, percent, formattedCurrent, formattedDuration }) => {
+    if (current) {
+      telemetry.onMusicTimeUpdate(current);
+    }
     if (trackProgressFill) {
       trackProgressFill.style.width = `${percent}%`;
     }
@@ -307,11 +318,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 14. Abrir modal de capítulos
   if (openTocBtn) {
-    openTocBtn.addEventListener('click', () => chaptersModal.open());
+    openTocBtn.addEventListener('click', () => {
+      chaptersModal.open();
+      telemetry.onTocOpen();
+    });
   }
   if (pageIndicator) {
     pageIndicator.style.cursor = 'pointer';
     pageIndicator.title = 'Abrir índice de capítulos';
-    pageIndicator.addEventListener('click', () => chaptersModal.open());
+    pageIndicator.addEventListener('click', () => {
+      chaptersModal.open();
+      telemetry.onTocOpen();
+    });
   }
 });

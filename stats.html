@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Panel de Lectura • Para Lau</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0f1117">
+  <!-- Fuentes elegantes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       PANTALLA DE ACCESO POR PIN DE SEGURIDAD (SOLO TÚ TIENES ACCESO)
+       ========================================================================== -->
+  <div id="pin-screen">
+    <div class="pin-modal">
+      <div class="pin-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h2 class="pin-title">Panel Privado</h2>
+      <p class="pin-subtitle">Ingresa el PIN de 4 dígitos para acceder a las estadísticas de lectura</p>
+
+      <div class="pin-dots-container">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <div class="pin-error-msg" id="pin-error"></div>
+
+      <div class="pin-keypad">
+        <button class="pin-btn" data-val="1">1</button>
+        <button class="pin-btn" data-val="2">2</button>
+        <button class="pin-btn" data-val="3">3</button>
+        <button class="pin-btn" data-val="4">4</button>
+        <button class="pin-btn" data-val="5">5</button>
+        <button class="pin-btn" data-val="6">6</button>
+        <button class="pin-btn" data-val="7">7</button>
+        <button class="pin-btn" data-val="8">8</button>
+        <button class="pin-btn" data-val="9">9</button>
+        <button class="pin-btn action-btn" data-val="clear">C</button>
+        <button class="pin-btn" data-val="0">0</button>
+        <button class="pin-btn action-btn" data-val="del">⌫</button>
+      </div>
+
+      <p class="pin-helper-note">PIN inicial por defecto: 2709 (27 de Septiembre)</p>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       APLICACIÓN PRINCIPAL: PANEL DE ESTADÍSTICAS
+       ========================================================================== -->
+  <div id="dashboard-app">
+    <!-- Encabezado -->
+    <header class="dash-header">
+      <div class="dash-brand">
+        <div class="dash-badge-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="dash-title">Para Lau • Panel de Lectura</h1>
+          <div class="dash-subtitle">Telemetría y Registro en Tiempo Real</div>
+        </div>
+      </div>
+
+      <div class="dash-actions">
+        <div class="live-indicator" id="live-indicator">
+          <div class="live-dot"></div>
+          <span id="live-text">Desconectada</span>
+        </div>
+
+        <button class="btn-header" id="btn-refresh" title="Actualizar datos">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+
+        <button class="btn-header" id="btn-settings" title="Ajustes de conexión (Firebase / PIN)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+
+        <button class="btn-header" id="btn-lock" title="Bloquear panel">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tarjetas Resumen (KPIs) -->
+    <section class="kpi-grid">
+      <!-- 1. Visitas Totales -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Visitas Totales</span>
+          <div class="kpi-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="val-visits">0</div>
+        <div class="kpi-desc" id="desc-visits">Esperando primera lectura</div>
+      </div>
+
+      <!-- 2. Tiempo Total de Lectura -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Tiempo Total</span>
+          <div class="kpi-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="val-total-time">0 s</div>
+        <div class="kpi-desc" id="desc-avg-time">Promedio de lectura</div>
+      </div>
+
+      <!-- 3. Última Visita / Dispositivo -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Última Visita</span>
+          <div class="kpi-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="val-last-seen" style="font-size: 1.25rem;">Sin visitas</div>
+        <div class="kpi-desc" id="desc-device">Dispositivo</div>
+      </div>
+
+      <!-- 4. Canción invisible string -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Música Taylor Swift</span>
+          <div class="kpi-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="val-song" style="font-size: 1.35rem;">Sin reproducir</div>
+        <div class="kpi-desc" id="desc-song">invisible string</div>
+      </div>
+    </section>
+
+    <!-- Destacado: Página Favorita -->
+    <div class="favorite-banner" id="favorite-banner" style="display: none;">
+      <div class="fav-info">
+        <div class="fav-star">⭐</div>
+        <div>
+          <div class="fav-title-sub">Página Más Leída • Favorita</div>
+          <div class="fav-page-name" id="fav-page-name">—</div>
+        </div>
+      </div>
+      <div class="fav-time-pill" id="fav-page-time">0 min</div>
+    </div>
+
+    <!-- Gráfico de Tiempo por Página -->
+    <section class="section-box">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Tiempo de Lectura por Página</h2>
+          <div class="section-subtitle">Minutos y segundos exactos que pasó leyendo cada sección</div>
+        </div>
+      </div>
+      <div class="page-bars-list" id="page-bars-container">
+        <!-- Renderizado dinámico -->
+      </div>
+    </section>
+
+    <!-- Historial Detallado de Sesiones -->
+    <section class="section-box">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Historial Cronológico de Sesiones</h2>
+          <div class="section-subtitle">Detalle de cada ocasión que abrió el libro</div>
+        </div>
+      </div>
+      <div class="sessions-list" id="sessions-list-container">
+        <!-- Renderizado dinámico -->
+      </div>
+    </section>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DE CONFIGURACIÓN DE CONEXIÓN EN LA NUBE (FIREBASE / PIN)
+       ========================================================================== -->
+  <div id="settings-modal">
+    <div class="settings-box">
+      <h3 class="settings-title">Configuración de Telemetría</h3>
+
+      <div class="settings-input-group">
+        <label class="settings-label" for="input-firebase-url">URL de Firebase Realtime Database (opcional para sincronización remota):</label>
+        <input class="settings-input" id="input-firebase-url" type="url" placeholder="https://tu-proyecto-default-rtdb.firebaseio.com">
+        <p class="settings-help">
+          Si lo dejas en blanco, las estadísticas se guardan localmente en tu navegador. Si le pegas la URL de tu base de datos gratuita de Firebase, podrás ver en vivo los datos desde cualquier dispositivo.
+        </p>
+      </div>
+
+      <div class="settings-input-group">
+        <label class="settings-label" for="input-custom-pin">Cambiar PIN de Acceso (4 dígitos):</label>
+        <input class="settings-input" id="input-custom-pin" type="text" maxlength="4" pattern="[0-9]*" placeholder="2709">
+      </div>
+
+      <div id="settings-notice" style="font-size: 0.82rem; min-height: 18px;"></div>
+
+      <div class="settings-actions">
+        <button class="btn-secondary" id="btn-close-settings">Cancelar</button>
+        <button class="btn-primary" id="btn-save-settings">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/dashboard/stats.js"></script>
+</body>
+</html>
