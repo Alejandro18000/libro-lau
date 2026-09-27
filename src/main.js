@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const petals = new PetalsEffect('petals-canvas');
   const audioController = new AudioController(bookMetadata.songDetails);
   const lightbox = new Lightbox();
+  lightbox.onOpen(({ caption, src }) => telemetry.onPhotoOpen(caption, src));
+  lightbox.onClose(() => telemetry.onPhotoClose());
 
   // 2. Renderizar páginas
   const renderer = new BookRenderer('flipbook');
@@ -70,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 1. Gesto de Deslizamiento (Swipe horizontal claro)
       if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.25) {
+        telemetry.onSwipe();
         if (diffX < 0) {
           pageFlip.flipNext();
         } else {
@@ -86,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        telemetry.onTap();
         const rect = bookEl.getBoundingClientRect();
         const tapX = touchEndX - rect.left;
         if (tapX > rect.width * 0.45) {
@@ -255,6 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isFull = !!document.fullscreenElement;
       fullscreenBtn.classList.toggle('active', isFull);
       fullscreenBtn.title = isFull ? "Salir de pantalla completa" : "Pantalla completa";
+      telemetry.onFullscreenToggle(isFull);
     });
   }
 
@@ -275,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnOpenSpotifyDirect) {
     btnOpenSpotifyDirect.addEventListener('click', (e) => {
       e.stopPropagation();
+      telemetry.onSpotifyClick();
     });
   }
 

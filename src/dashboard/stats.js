@@ -1,18 +1,20 @@
 /**
  * stats.js
- * Lógica del panel privado de estadísticas y telemetría para el libro de Lau.
+ * Controlador del panel de telemetría estilo Apple Glass (iOS 18 / visionOS).
+ * Procesa métricas de lectura en vivo, mapas de calor, relecturas, fotos y entorno técnico.
  */
 
 import './stats.css';
 import { analyticsConfig } from '../services/analyticsConfig.js';
 import { bookPages } from '../chapters/chaptersData.js';
 
-class StatsDashboard {
+class AppleStatsDashboard {
   constructor() {
     this.isAuthenticated = false;
     this.currentPin = '';
     this.sessions = [];
     this.pollInterval = null;
+    this.currentTab = 'tab-overview';
 
     this.initElements();
     this.bindEvents();
@@ -20,52 +22,88 @@ class StatsDashboard {
   }
 
   initElements() {
+    // PIN Lock Screen
     this.pinScreen = document.getElementById('pin-screen');
     this.pinDots = document.querySelectorAll('.pin-dot');
     this.pinError = document.getElementById('pin-error');
     this.dashApp = document.getElementById('dashboard-app');
 
-    // Header y acciones
-    this.liveIndicator = document.getElementById('live-indicator');
-    this.liveText = document.getElementById('live-text');
+    // Live Activity Capsule
+    this.liveActivityBar = document.getElementById('live-activity-bar');
+    this.liveHeadline = document.getElementById('live-headline');
+    this.liveSubtext = document.getElementById('live-subtext');
+    this.liveTimePill = document.getElementById('live-time-pill');
+
+    // Acciones del Header
     this.btnRefresh = document.getElementById('btn-refresh');
     this.btnSettings = document.getElementById('btn-settings');
     this.btnLock = document.getElementById('btn-lock');
 
-    // KPIs
-    this.valVisits = document.getElementById('val-visits');
-    this.descVisits = document.getElementById('desc-visits');
-    this.valTotalTime = document.getElementById('val-total-time');
-    this.descAvgTime = document.getElementById('desc-avg-time');
-    this.valLastSeen = document.getElementById('val-last-seen');
-    this.descDevice = document.getElementById('desc-device');
-    this.valSong = document.getElementById('val-song');
-    this.descSong = document.getElementById('desc-song');
+    // Segmented Control Tabs
+    this.segmentBtns = document.querySelectorAll('.segment-btn');
+    this.tabPanes = document.querySelectorAll('.tab-pane');
 
-    // Página favorita
-    this.favBanner = document.getElementById('favorite-banner');
-    this.favPageName = document.getElementById('fav-page-name');
-    this.favPageTime = document.getElementById('fav-page-time');
+    // Hero Overview (Tab 1)
+    this.valEngagementScore = document.getElementById('val-engagement-score');
+    this.valPaceTag = document.getElementById('val-pace-tag');
+    this.valReadingPace = document.getElementById('val-reading-pace');
+    this.valCompletionPct = document.getElementById('val-completion-pct');
+    this.valReReadsTotal = document.getElementById('val-re-reads-total');
+    this.engagementRingFill = document.getElementById('engagement-ring-fill');
 
-    // Contenedores
-    this.pageBarsContainer = document.getElementById('page-bars-container');
-    this.sessionsListContainer = document.getElementById('sessions-list-container');
+    // Favorite Hero Card
+    this.favHeroCard = document.getElementById('fav-hero-card');
+    this.favChapterTitle = document.getElementById('fav-chapter-title');
+    this.favChapterDesc = document.getElementById('fav-chapter-desc');
+    this.favChapterTime = document.getElementById('fav-chapter-time');
+    this.favChapterPct = document.getElementById('fav-chapter-pct');
 
-    // Modal de ajustes
+    // Bento KPIs
+    this.valTotalVisits = document.getElementById('val-total-visits');
+    this.descVisitsCount = document.getElementById('desc-visits-count');
+    this.valTotalReadingTime = document.getElementById('val-total-reading-time');
+    this.descAvgReadingTime = document.getElementById('desc-avg-reading-time');
+    this.valLastSeenDate = document.getElementById('val-last-seen-date');
+    this.descLastDevice = document.getElementById('desc-last-device');
+    this.valMusicPlayed = document.getElementById('val-music-played');
+    this.descMusicDuration = document.getElementById('desc-music-duration');
+    this.valPhotosZoomed = document.getElementById('val-photos-zoomed');
+    this.descPhotosZoomed = document.getElementById('desc-photos-zoomed');
+    this.valGesturesCount = document.getElementById('val-gestures-count');
+    this.descGesturesDetail = document.getElementById('desc-gestures-detail');
+
+    // Tab 2: Chapters & Heatmap
+    this.chaptersBarsContainer = document.getElementById('chapters-bars-list');
+
+    // Tab 3: Multimedia & Fotos
+    this.musicStatusPill = document.getElementById('music-status-pill');
+    this.musicStatPlays = document.getElementById('music-stat-plays');
+    this.musicStatDuration = document.getElementById('music-stat-duration');
+    this.musicStatCompleted = document.getElementById('music-stat-completed');
+    this.musicStatSpotify = document.getElementById('music-stat-spotify');
+    this.photosInspectContainer = document.getElementById('photos-inspect-container');
+
+    // Tab 4: Dispositivo & Entorno
+    this.deviceSpecsContainer = document.getElementById('device-specs-container');
+
+    // Tab 5: Sesiones Timeline
+    this.sessionsTimelineContainer = document.getElementById('sessions-timeline-list');
+
+    // Modal Ajustes
     this.settingsModal = document.getElementById('settings-modal');
     this.inputFirebase = document.getElementById('input-firebase-url');
     this.inputPin = document.getElementById('input-custom-pin');
     this.btnSaveSettings = document.getElementById('btn-save-settings');
+    this.btnCancelSettings = document.getElementById('btn-cancel-settings');
     this.btnCloseSettings = document.getElementById('btn-close-settings');
     this.settingsNotice = document.getElementById('settings-notice');
   }
 
   bindEvents() {
-    // Teclado del PIN
+    // Teclado PIN en pantalla
     document.querySelectorAll('.pin-btn[data-val]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const val = btn.getAttribute('data-val');
-        this.handlePinInput(val);
+        this.handlePinInput(btn.getAttribute('data-val'));
       });
     });
 
@@ -82,12 +120,20 @@ class StatsDashboard {
       }
     });
 
+    // Segmented Controls (Tabs)
+    this.segmentBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.getAttribute('data-tab');
+        this.switchTab(targetTab);
+      });
+    });
+
     // Botones de acción
     if (this.btnRefresh) {
       this.btnRefresh.addEventListener('click', () => {
-        this.btnRefresh.classList.add('rotating');
+        this.btnRefresh.style.transform = 'rotate(180deg)';
         this.fetchData().then(() => {
-          setTimeout(() => this.btnRefresh.classList.remove('rotating'), 500);
+          setTimeout(() => this.btnRefresh.style.transform = '', 400);
         });
       });
     }
@@ -103,10 +149,23 @@ class StatsDashboard {
     if (this.btnCloseSettings) {
       this.btnCloseSettings.addEventListener('click', () => this.closeSettings());
     }
+    if (this.btnCancelSettings) {
+      this.btnCancelSettings.addEventListener('click', () => this.closeSettings());
+    }
 
     if (this.btnSaveSettings) {
       this.btnSaveSettings.addEventListener('click', () => this.saveSettings());
     }
+  }
+
+  switchTab(targetTabId) {
+    this.currentTab = targetTabId;
+    this.segmentBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === targetTabId);
+    });
+    this.tabPanes.forEach(pane => {
+      pane.classList.toggle('active', pane.id === targetTabId);
+    });
   }
 
   getConfiguredPin() {
@@ -164,7 +223,7 @@ class StatsDashboard {
       this.unlockDashboard();
     } else {
       if (this.pinError) {
-        this.pinError.textContent = 'PIN incorrecto. Intenta de nuevo.';
+        this.pinError.textContent = 'Código incorrecto. Intenta de nuevo.';
         this.pinError.classList.add('visible');
       }
       const modal = document.querySelector('.pin-modal');
@@ -182,9 +241,9 @@ class StatsDashboard {
     if (this.pinScreen) this.pinScreen.classList.add('hidden');
     this.fetchData();
 
-    // Polling automático cada 10 segundos
+    // Sincronización en vivo cada 5 segundos (Latido de Live Activity)
     if (this.pollInterval) clearInterval(this.pollInterval);
-    this.pollInterval = setInterval(() => this.fetchData(true), 10000);
+    this.pollInterval = setInterval(() => this.fetchData(true), 5000);
   }
 
   lockDashboard() {
@@ -200,12 +259,12 @@ class StatsDashboard {
     const savedConfig = localStorage.getItem(analyticsConfig.storageKeys.remoteConfig);
     if (savedConfig) {
       try {
-        return JSON.parse(savedConfig);
+        const parsed = JSON.parse(savedConfig);
+        if (parsed.firebaseUrl) return parsed;
       } catch (e) {}
     }
     return {
-      firebaseUrl: analyticsConfig.firebaseUrl || '',
-      googleSheetsUrl: analyticsConfig.googleSheetsUrl || '',
+      firebaseUrl: analyticsConfig.firebaseUrl || 'https://libro-lau-default-rtdb.firebaseio.com',
       customPin: analyticsConfig.dashboardPin || '2709'
     };
   }
@@ -221,20 +280,19 @@ class StatsDashboard {
       });
     } catch (e) {}
 
-    // 2. Cargar sesiones remotas desde Firebase si está configurado
+    // 2. Cargar sesiones remotas desde Firebase
     const cfg = this.getRemoteConfig();
     if (cfg.firebaseUrl) {
       try {
         const cleanUrl = cfg.firebaseUrl.replace(/\/$/, '');
-        const res = await fetch(`${cleanUrl}/sessions.json`);
+        const res = await fetch(`${cleanUrl}/sessions.json`, { cache: 'no-store' });
         if (res.ok) {
           const remoteSessions = await res.json();
           if (remoteSessions && typeof remoteSessions === 'object') {
             Object.values(remoteSessions).forEach(s => {
               if (s && s.sessionId) {
-                // Si la sesión remota tiene más segundos o actividad más reciente, sobrescribe
                 const localS = sessionsMap.get(s.sessionId);
-                if (!localS || (s.totalSeconds || 0) >= (localS.totalSeconds || 0)) {
+                if (!localS || (s.totalSeconds || 0) >= (localS.totalSeconds || 0) || s.isLive) {
                   sessionsMap.set(s.sessionId, s);
                 }
               }
@@ -242,7 +300,7 @@ class StatsDashboard {
           }
         }
       } catch (err) {
-        if (!silent) console.warn('Error conectando a Firebase:', err);
+        if (!silent) console.warn('Aviso de conexión Firebase:', err);
       }
     }
 
@@ -288,76 +346,111 @@ class StatsDashboard {
       return;
     }
 
-    // Calcular Métricas Agregadas
+    const latest = this.sessions[0];
     const totalSessions = this.sessions.length;
     let totalSecs = 0;
     let musicPlays = 0;
     let maxMusicSecs = 0;
-    let latestSession = this.sessions[0];
-    let isCurrentlyLive = false;
+    let musicCompleted = false;
+    let spotifyClicked = false;
+    let photosZoomedSet = new Set();
+    let photosDetailsMap = {};
+    let totalSwipes = 0;
+    let totalTaps = 0;
+    let totalReReads = 0;
+    let maxPageGlobal = 0;
+    let anyCompletedBook = false;
 
-    // Mapa de tiempos por página acumulados
+    // Mapa acumulado por página
     const pageTimesAcc = {};
+
+    // Detección de lectura en vivo
+    let isCurrentlyLive = false;
+    let liveSession = null;
 
     this.sessions.forEach(s => {
       totalSecs += (s.totalSeconds || 0);
-      if (s.musicPlayed) {
-        musicPlays += (s.musicPlayCount || 1);
+      if (s.musicPlayed) musicPlays += (s.musicPlayCount || 1);
+      if (s.musicDurationSec > maxMusicSecs) maxMusicSecs = s.musicDurationSec;
+      if (s.musicCompleted) musicCompleted = true;
+      if (s.spotifyLinkClicked) spotifyClicked = true;
+
+      totalSwipes += (s.swipeCount || 0);
+      totalTaps += (s.tapCount || 0);
+      totalReReads += (s.reReadCount || 0);
+      if (s.maxPageReached > maxPageGlobal) maxPageGlobal = s.maxPageReached;
+      if (s.completedBook) anyCompletedBook = true;
+
+      // Fotos
+      if (s.photosViewed && Array.isArray(s.photosViewed)) {
+        s.photosViewed.forEach(p => photosZoomedSet.add(p));
       }
-      if (s.musicDurationSec > maxMusicSecs) {
-        maxMusicSecs = s.musicDurationSec;
+      if (s.photosDetails) {
+        Object.entries(s.photosDetails).forEach(([caption, details]) => {
+          if (!photosDetailsMap[caption]) {
+            photosDetailsMap[caption] = { timesOpened: 0, totalSeconds: 0 };
+          }
+          photosDetailsMap[caption].timesOpened += (details.timesOpened || 0);
+          photosDetailsMap[caption].totalSeconds += (details.totalSeconds || 0);
+        });
       }
 
-      // Revisar si está activa en los últimos 90 segundos
-      const lastActiveMs = new Date(s.lastActiveAt || 0).getTime();
-      if (Date.now() - lastActiveMs < 90000 && s.isLive !== false) {
-        isCurrentlyLive = true;
-      }
-
-      // Sumar tiempos de cada página
+      // Páginas
       if (s.pageTimes) {
-        Object.entries(s.pageTimes).forEach(([pageNum, pData]) => {
-          if (!pageTimesAcc[pageNum]) {
-            pageTimesAcc[pageNum] = {
-              title: pData.title || `Página ${pageNum}`,
+        Object.entries(s.pageTimes).forEach(([num, pData]) => {
+          if (!pageTimesAcc[num]) {
+            pageTimesAcc[num] = {
+              title: pData.title || `Página ${num}`,
               seconds: 0,
-              visits: 0
+              visits: 0,
+              reReads: 0
             };
           }
-          pageTimesAcc[pageNum].seconds += (pData.seconds || 0);
-          pageTimesAcc[pageNum].visits += (pData.visits || 1);
+          pageTimesAcc[num].seconds += (pData.seconds || 0);
+          pageTimesAcc[num].visits += (pData.visits || 1);
+          pageTimesAcc[num].reReads += (pData.reReads || 0);
         });
+      }
+
+      // Verificar si la sesión tiene actividad en los últimos 75 segundos
+      const lastActiveMs = new Date(s.lastActiveAt || 0).getTime();
+      if (Date.now() - lastActiveMs < 75000 && s.isLive !== false) {
+        isCurrentlyLive = true;
+        liveSession = s;
       }
     });
 
-    const avgSecs = Math.round(totalSecs / Math.max(1, totalSessions));
-
-    // 1. Estado en vivo
-    if (this.liveIndicator) {
-      this.liveIndicator.classList.toggle('online', isCurrentlyLive);
-      if (this.liveText) {
-        this.liveText.textContent = isCurrentlyLive ? 'Leyendo en vivo ahora mismo' : 'Desconectada';
+    // 1. Apple Dynamic Island / Live Activity Capsule
+    if (this.liveActivityBar) {
+      this.liveActivityBar.classList.toggle('active-live', isCurrentlyLive);
+      if (isCurrentlyLive && liveSession) {
+        this.liveHeadline.textContent = `Lau está leyendo en vivo ahora mismo`;
+        this.liveSubtext.textContent = `En ${liveSession.activePageTitle || 'el libro'} • ${liveSession.device || 'Móvil'}`;
+        this.liveTimePill.textContent = `Lectura activa (${this.formatDuration(liveSession.totalSeconds)})`;
+      } else {
+        const lastSeen = this.formatRelativeTime(latest.lastActiveAt || latest.startedAt);
+        this.liveHeadline.textContent = `Última lectura: ${lastSeen}`;
+        this.liveSubtext.textContent = `${latest.device || 'Móvil'} (${latest.browser || 'Safari'}) • ${latest.location?.city || 'Colombia'}`;
+        this.liveTimePill.textContent = 'Inactiva';
       }
     }
 
-    // 2. KPIs
-    if (this.valVisits) this.valVisits.textContent = `${totalSessions}`;
-    if (this.descVisits) this.descVisits.textContent = totalSessions === 1 ? '1 lectura registrada' : `${totalSessions} visitas al libro`;
-
-    if (this.valTotalTime) this.valTotalTime.textContent = this.formatDuration(totalSecs);
-    if (this.descAvgTime) this.descAvgTime.textContent = `Promedio: ${this.formatDuration(avgSecs)} por visita`;
-
-    if (this.valLastSeen) this.valLastSeen.textContent = this.formatRelativeTime(latestSession.lastActiveAt || latestSession.startedAt);
-    if (this.descDevice) this.descDevice.textContent = `${latestSession.device || 'Móvil'} • ${latestSession.browser || 'Navegador'}`;
-
-    if (this.valSong) {
-      this.valSong.textContent = musicPlays > 0 ? `${musicPlays} veces` : 'No reproducida';
+    // 2. Tab 1: Hero Engagement Ring & KPIs
+    const engagementScore = latest.engagementScore || Math.min(100, Math.round((totalSecs / 120) * 40 + (maxPageGlobal * 5)));
+    if (this.valEngagementScore) this.valEngagementScore.textContent = `${engagementScore}%`;
+    if (this.engagementRingFill) {
+      // Circunferencia = 2 * PI * 50 = 314.15
+      const offset = 314 - (314 * (engagementScore / 100));
+      this.engagementRingFill.style.strokeDashoffset = `${offset}`;
     }
-    if (this.descSong) {
-      this.descSong.textContent = musicPlays > 0 ? `invisible string (${this.formatDuration(maxMusicSecs)})` : 'No ha presionado play';
-    }
+    if (this.valReadingPace) this.valReadingPace.textContent = latest.readingPace || 'Lectura atenta';
+    if (this.valPaceTag) this.valPaceTag.textContent = latest.readingPace ? latest.readingPace.split(' ')[0] : 'Atenta';
+    
+    const completionPct = anyCompletedBook ? 100 : Math.round((maxPageGlobal / Math.max(1, bookPages.length + 1)) * 100);
+    if (this.valCompletionPct) this.valCompletionPct.textContent = `${completionPct}%`;
+    if (this.valReReadsTotal) this.valReReadsTotal.textContent = `${totalReReads} ${totalReReads === 1 ? 'vez' : 'veces'}`;
 
-    // 3. Página Favorita (Mayor tiempo de lectura)
+    // 3. Capítulo Favorito Hero Card
     let favPageNum = null;
     let maxPageSecs = 0;
     Object.entries(pageTimesAcc).forEach(([num, data]) => {
@@ -367,51 +460,103 @@ class StatsDashboard {
       }
     });
 
-    if (favPageNum !== null && maxPageSecs > 0 && this.favBanner) {
-      this.favBanner.style.display = 'flex';
+    if (favPageNum !== null && maxPageSecs > 0) {
       const favData = pageTimesAcc[favPageNum];
-      if (this.favPageName) this.favPageName.textContent = favData.title;
-      if (this.favPageTime) this.favPageTime.textContent = `${this.formatDuration(favData.seconds)} de lectura`;
+      if (this.favChapterTitle) this.favChapterTitle.textContent = favData.title;
+      const pctOfTotal = totalSecs > 0 ? Math.round((favData.seconds / totalSecs) * 100) : 0;
+      if (this.favChapterDesc) {
+        this.favChapterDesc.textContent = `Lau se ha detenido aquí ${this.formatDuration(favData.seconds)}, concentrando el ${pctOfTotal}% de toda su atención de lectura.`;
+      }
+      if (this.favChapterTime) this.favChapterTime.textContent = this.formatDuration(favData.seconds);
+      if (this.favChapterPct) this.favChapterPct.textContent = `${pctOfTotal}%`;
     }
 
-    // 4. Gráfico de barras de tiempo por página
-    this.renderPageBars(pageTimesAcc, maxPageSecs);
+    // 4. Bento Grid
+    if (this.valTotalVisits) this.valTotalVisits.textContent = `${totalSessions}`;
+    if (this.descVisitsCount) this.descVisitsCount.textContent = totalSessions === 1 ? '1 lectura registrada' : `${totalSessions} visitas al libro`;
 
-    // 5. Historial de sesiones
-    this.renderSessionsList();
+    if (this.valTotalReadingTime) this.valTotalReadingTime.textContent = this.formatDuration(totalSecs);
+    const avgSecs = Math.round(totalSecs / Math.max(1, totalSessions));
+    if (this.descAvgReadingTime) this.descAvgReadingTime.textContent = `Promedio: ${this.formatDuration(avgSecs)} por visita`;
+
+    if (this.valLastSeenDate) this.valLastSeenDate.textContent = this.formatRelativeTime(latest.lastActiveAt || latest.startedAt);
+    if (this.descLastDevice) this.descLastDevice.textContent = `${latest.device || 'Móvil'} • ${latest.location?.city || 'Colombia'}`;
+
+    if (this.valMusicPlayed) {
+      this.valMusicPlayed.textContent = musicPlays > 0 ? `${musicPlays} veces` : 'No';
+    }
+    if (this.descMusicDuration) {
+      this.descMusicDuration.textContent = musicPlays > 0 ? `Escuchó ${this.formatDuration(maxMusicSecs)}` : 'invisible string';
+    }
+
+    if (this.valPhotosZoomed) this.valPhotosZoomed.textContent = `${photosZoomedSet.size}`;
+    if (this.descPhotosZoomed) this.descPhotosZoomed.textContent = `${photosZoomedSet.size} fotos abiertas en pantalla completa`;
+
+    const totalGestures = totalSwipes + totalTaps;
+    if (this.valGesturesCount) this.valGesturesCount.textContent = `${totalGestures}`;
+    if (this.descGesturesDetail) this.descGesturesDetail.textContent = `${totalSwipes} deslizamientos • ${totalTaps} toques`;
+
+    // 5. Renderizar Tab 2: Capítulos & Heatmap
+    this.renderChaptersHeatmap(pageTimesAcc, maxPageSecs, totalSecs);
+
+    // 6. Renderizar Tab 3: Multimedia & Fotos
+    this.renderMultimediaTab(musicPlays, maxMusicSecs, musicCompleted, spotifyClicked, photosDetailsMap);
+
+    // 7. Renderizar Tab 4: Dispositivo & Entorno
+    this.renderDeviceTab(latest);
+
+    // 8. Renderizar Tab 5: Historial Cronológico
+    this.renderSessionsTimeline();
   }
 
-  renderPageBars(pageTimesAcc, maxPageSecs) {
-    if (!this.pageBarsContainer) return;
+  renderChaptersHeatmap(pageTimesAcc, maxPageSecs, totalSecs) {
+    if (!this.chaptersBarsContainer) return;
 
-    // Asegurar orden de páginas 0 a N
     const totalPages = bookPages.length + 2;
-    const rows = [];
+    const items = [];
 
     for (let i = 0; i < totalPages; i++) {
       const data = pageTimesAcc[i] || {
         title: this.getDefaultPageTitle(i),
         seconds: 0,
-        visits: 0
+        visits: 0,
+        reReads: 0
       };
 
-      const pct = maxPageSecs > 0 ? Math.max(4, Math.round((data.seconds / maxPageSecs) * 100)) : 0;
-      const isTop = data.seconds === maxPageSecs && maxPageSecs > 0;
+      const pctRelative = maxPageSecs > 0 ? Math.max(3, Math.round((data.seconds / maxPageSecs) * 100)) : 0;
+      const pctOfBook = totalSecs > 0 ? Math.round((data.seconds / totalSecs) * 100) : 0;
+      const isFav = data.seconds === maxPageSecs && maxPageSecs > 0;
 
-      rows.push(`
-        <div class="page-bar-row">
-          <div class="page-bar-meta">
-            <span class="page-bar-name">${data.title} ${isTop ? '⭐' : ''}</span>
-            <span class="page-bar-time">${this.formatDuration(data.seconds)} (${data.visits} ${data.visits === 1 ? 'vez' : 'veces'})</span>
+      // Badges
+      let badges = [];
+      if (isFav) badges.push(`<span class="badge-tag-pill star">⭐ Favorito</span>`);
+      if (data.reReads > 0) badges.push(`<span class="badge-tag-pill reread">🔄 Releído ${data.reReads}x</span>`);
+      if (i === 3) badges.push(`<span class="badge-tag-pill photo">📸 Foto Polaroid</span>`);
+      if (i === 8) badges.push(`<span class="badge-tag-pill star">🎵 Canción</span>`);
+
+      items.push(`
+        <div class="chapter-bar-item">
+          <div class="chapter-meta-top">
+            <div class="chapter-title-group">
+              <span class="chapter-title-text">${data.title}</span>
+              ${badges.join(' ')}
+            </div>
+            <span class="chapter-time-badge">${this.formatDuration(data.seconds)}</span>
           </div>
-          <div class="page-bar-track">
-            <div class="page-bar-fill ${isTop ? 'highlight' : ''}" style="width: ${pct}%"></div>
+
+          <div class="chapter-progress-track">
+            <div class="chapter-progress-fill ${isFav ? 'highlight' : ''}" style="width: ${pctRelative}%"></div>
+          </div>
+
+          <div class="chapter-stats-bottom">
+            <span>${pctOfBook}% de toda la lectura</span>
+            <span>Abierto ${data.visits} ${data.visits === 1 ? 'vez' : 'veces'}</span>
           </div>
         </div>
       `);
     }
 
-    this.pageBarsContainer.innerHTML = rows.join('');
+    this.chaptersBarsContainer.innerHTML = items.join('');
   }
 
   getDefaultPageTitle(pageIndex) {
@@ -428,12 +573,72 @@ class StatsDashboard {
     return `Página ${pageIndex}`;
   }
 
-  renderSessionsList() {
-    if (!this.sessionsListContainer) return;
+  renderMultimediaTab(musicPlays, maxMusicSecs, musicCompleted, spotifyClicked, photosDetailsMap) {
+    if (this.musicStatusPill) {
+      if (musicPlays > 0) {
+        this.musicStatusPill.textContent = 'Reproducida en el libro';
+        this.musicStatusPill.style.background = 'rgba(48, 209, 88, 0.2)';
+        this.musicStatusPill.style.color = '#a7f3d0';
+      } else {
+        this.musicStatusPill.textContent = 'No reproducida aún';
+      }
+    }
 
-    const cards = this.sessions.map((s, index) => {
-      const num = this.sessions.length - index;
-      const dateStr = new Date(s.startedAt || s.lastActiveAt).toLocaleString('es-CO', {
+    if (this.musicStatPlays) this.musicStatPlays.textContent = `${musicPlays} veces`;
+    if (this.musicStatDuration) this.musicStatDuration.textContent = this.formatDuration(maxMusicSecs);
+    if (this.musicStatCompleted) this.musicStatCompleted.textContent = musicCompleted ? 'Sí (100%)' : (musicPlays > 0 ? 'Parcial' : 'No');
+    if (this.musicStatSpotify) this.musicStatSpotify.textContent = spotifyClicked ? 'Sí (Abrió Spotify)' : 'No';
+
+    // Lista de Fotos
+    if (this.photosInspectContainer) {
+      const photosEntries = Object.entries(photosDetailsMap);
+      if (photosEntries.length === 0) {
+        this.photosInspectContainer.innerHTML = `
+          <div style="text-align: center; padding: 18px; color: var(--text-tertiary); font-size: 0.84rem;">
+            Aún no ha abierto fotos Polaroid en pantalla completa.
+          </div>
+        `;
+      } else {
+        this.photosInspectContainer.innerHTML = photosEntries.map(([caption, d]) => `
+          <div class="photo-inspect-item">
+            <span class="photo-item-name">📷 ${caption}</span>
+            <span class="photo-item-metrics">Mirada ${d.timesOpened}x (${this.formatDuration(d.totalSeconds)})</span>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  renderDeviceTab(latest) {
+    if (!this.deviceSpecsContainer) return;
+
+    const specs = [
+      { label: 'Dispositivo & Modelo', val: `${latest.device || 'Móvil'} (${latest.deviceModel || 'General'})` },
+      { label: 'Sistema Operativo', val: latest.os || 'iOS / Android' },
+      { label: 'Navegador Web', val: latest.browser || 'Safari / Chrome' },
+      { label: 'Resolución de Pantalla', val: `${latest.screen || '390x844'} (${latest.retina || 'Retina'})` },
+      { label: 'Orientación', val: latest.orientation || 'Vertical' },
+      { label: 'Apariencia del Sistema', val: latest.colorScheme || 'Modo Oscuro' },
+      { label: 'Batería del Teléfono', val: latest.battery || 'No reportada' },
+      { label: 'Conexión a Red', val: latest.connectionType || 'WiFi / 4G' },
+      { label: 'Ubicación Aproximada', val: `${latest.location?.city || 'Bogotá'}, ${latest.location?.country || 'Colombia'}` },
+      { label: 'Zona Horaria e Idioma', val: `${latest.timezone || 'America/Bogota'} (${latest.language || 'es'})` }
+    ];
+
+    this.deviceSpecsContainer.innerHTML = specs.map(s => `
+      <div class="spec-box">
+        <span class="spec-label">${s.label}</span>
+        <span class="spec-value">${s.val}</span>
+      </div>
+    `).join('');
+  }
+
+  renderSessionsTimeline() {
+    if (!this.sessionsTimelineContainer) return;
+
+    this.sessionsTimelineContainer.innerHTML = this.sessions.map((s, idx) => {
+      const num = this.sessions.length - idx;
+      const dateFormatted = new Date(s.startedAt || s.lastActiveAt).toLocaleString('es-CO', {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -441,67 +646,78 @@ class StatsDashboard {
         minute: '2-digit'
       });
 
-      const photosStr = (s.photosViewed && s.photosViewed.length > 0)
-        ? `${s.photosViewed.length} ampliadas`
-        : 'Ninguna';
+      // Recorrido secuencial de páginas
+      let pathHtml = '';
+      if (s.pageTransitions && s.pageTransitions.length > 0) {
+        pathHtml = s.pageTransitions.map((t, i) => `
+          <span class="path-step-pill">${t.toTitle} (${t.time})</span>
+          ${i < s.pageTransitions.length - 1 ? '<span class="path-arrow">➔</span>' : ''}
+        `).join(' ');
+      } else {
+        pathHtml = `<span style="font-size: 0.74rem; color: var(--text-tertiary);">Leyó hasta ${s.activePageTitle || 'Página ' + (s.maxPageReached || 0)}</span>`;
+      }
 
       return `
-        <div class="session-card">
-          <div class="session-card-header">
-            <span class="session-badge">Visita #${s.visitNumber || num}</span>
-            <span class="session-date">${dateStr} (${this.formatRelativeTime(s.lastActiveAt)})</span>
+        <div class="timeline-session-card">
+          <div class="timeline-card-header">
+            <span class="timeline-badge">Sesión #${s.visitNumber || num}</span>
+            <span class="timeline-date">${dateFormatted} (${this.formatRelativeTime(s.lastActiveAt)})</span>
           </div>
-          <div class="session-details-grid">
-            <div class="session-detail-item">
-              <span class="session-detail-label">Dispositivo</span>
-              <span class="session-detail-val">${s.device || 'Móvil'} (${s.browser || 'Web'})</span>
+
+          <div class="timeline-details-row">
+            <div class="tl-item">
+              <span class="tl-item-lbl">Dispositivo</span>
+              <span class="tl-item-val">${s.device || 'Móvil'} (${s.browser || 'Web'})</span>
             </div>
-            <div class="session-detail-item">
-              <span class="session-detail-label">Tiempo Lectura</span>
-              <span class="session-detail-val">${this.formatDuration(s.totalSeconds)}</span>
+            <div class="tl-item">
+              <span class="tl-item-lbl">Tiempo de Lectura</span>
+              <span class="tl-item-val" style="color: var(--apple-gold);">${this.formatDuration(s.totalSeconds)}</span>
             </div>
-            <div class="session-detail-item">
-              <span class="session-detail-label">Progreso</span>
-              <span class="session-detail-val">${s.completedBook ? 'Completó el libro (100%)' : `Hasta Pág. ${s.maxPageReached || 0}`}</span>
+            <div class="tl-item">
+              <span class="tl-item-lbl">Página Máxima</span>
+              <span class="tl-item-val">${s.completedBook ? 'Libro Completo (100%)' : `Hasta Pág. ${s.maxPageReached || 0}`}</span>
             </div>
-            <div class="session-detail-item">
-              <span class="session-detail-label">Canción Taylor</span>
-              <span class="session-detail-val">${s.musicPlayed ? `Escuchó ${this.formatDuration(s.musicDurationSec)}` : 'No'}</span>
+            <div class="tl-item">
+              <span class="tl-item-lbl">Música Taylor</span>
+              <span class="tl-item-val">${s.musicPlayed ? `Escuchó ${this.formatDuration(s.musicDurationSec)}` : 'No'}</span>
             </div>
-            <div class="session-detail-item">
-              <span class="session-detail-label">Fotos Polaroid</span>
-              <span class="session-detail-val">${photosStr}</span>
+          </div>
+
+          <div style="margin-top: 6px;">
+            <span style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-tertiary); font-weight: 600;">
+              Ruta de Lectura & Páginas Visitadas:
+            </span>
+            <div class="session-path-list">
+              ${pathHtml}
             </div>
           </div>
         </div>
       `;
-    });
-
-    this.sessionsListContainer.innerHTML = cards.join('');
+    }).join('');
   }
 
   renderEmptyState() {
-    if (this.valVisits) this.valVisits.textContent = '0';
-    if (this.valTotalTime) this.valTotalTime.textContent = '0 s';
-    if (this.valLastSeen) this.valLastSeen.textContent = 'Sin visitas';
-    if (this.valSong) this.valSong.textContent = 'Sin reproducir';
-    if (this.favBanner) this.favBanner.style.display = 'none';
+    if (this.valTotalVisits) this.valTotalVisits.textContent = '0';
+    if (this.valTotalReadingTime) this.valTotalReadingTime.textContent = '0s';
+    if (this.valLastSeenDate) this.valLastSeenDate.textContent = 'Sin lecturas';
+    if (this.favChapterTitle) this.favChapterTitle.textContent = 'Esperando primera lectura';
+    if (this.favChapterDesc) this.favChapterDesc.textContent = 'En cuanto Lau abra el libro, sus tiempos y páginas favoritas aparecerán aquí en vivo.';
 
-    if (this.pageBarsContainer) {
-      this.pageBarsContainer.innerHTML = `
-        <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.9rem;">
-          Aún no hay visitas registradas.<br>
-          <span style="font-size: 0.8rem; opacity: 0.7;">
-            Abre el libro principal en tu celular o compárteselo a Lau para ver aquí los tiempos y páginas en vivo.
+    if (this.chaptersBarsContainer) {
+      this.chaptersBarsContainer.innerHTML = `
+        <div style="text-align: center; padding: 30px; color: var(--text-secondary); font-size: 0.88rem;">
+          Aún no hay lecturas registradas en la base de datos.<br>
+          <span style="font-size: 0.76rem; color: var(--text-tertiary);">
+            Abre el libro en tu celular o compártelo a Lau para ver la telemetría en tiempo real.
           </span>
         </div>
       `;
     }
 
-    if (this.sessionsListContainer) {
-      this.sessionsListContainer.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">
-          El historial de sesiones aparecerá aquí automáticamente.
+    if (this.sessionsTimelineContainer) {
+      this.sessionsTimelineContainer.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: var(--text-tertiary); font-size: 0.82rem;">
+          Las sesiones se ordenarán cronológicamente aquí con su ruta de navegación.
         </div>
       `;
     }
@@ -531,7 +747,7 @@ class StatsDashboard {
     localStorage.setItem(analyticsConfig.storageKeys.remoteConfig, JSON.stringify(newConfig));
 
     if (this.settingsNotice) {
-      this.settingsNotice.style.color = 'var(--accent-green)';
+      this.settingsNotice.style.color = 'var(--apple-green)';
       this.settingsNotice.textContent = '¡Ajustes guardados correctamente!';
     }
 
@@ -543,5 +759,5 @@ class StatsDashboard {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  new StatsDashboard();
+  new AppleStatsDashboard();
 });

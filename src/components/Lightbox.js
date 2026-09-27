@@ -21,6 +21,9 @@ export class Lightbox {
     this.captionEl = this.overlay.querySelector('#lightbox-caption');
     this.closeBtn = this.overlay.querySelector('#lightbox-close');
 
+    this.onOpenCallbacks = [];
+    this.onCloseCallbacks = [];
+
     this.close = this.close.bind(this);
     this.closeBtn.addEventListener('click', this.close);
     this.overlay.addEventListener('click', (e) => {
@@ -34,13 +37,25 @@ export class Lightbox {
     });
   }
 
+  onOpen(cb) {
+    if (typeof cb === 'function') this.onOpenCallbacks.push(cb);
+  }
+
+  onClose(cb) {
+    if (typeof cb === 'function') this.onCloseCallbacks.push(cb);
+  }
+
   open(src, caption) {
     this.imgEl.src = src;
     this.captionEl.textContent = caption || '';
     this.overlay.classList.add('open');
+    this.onOpenCallbacks.forEach(cb => cb({ src, caption }));
   }
 
   close() {
-    this.overlay.classList.remove('open');
+    if (this.overlay.classList.contains('open')) {
+      this.overlay.classList.remove('open');
+      this.onCloseCallbacks.forEach(cb => cb());
+    }
   }
 }
