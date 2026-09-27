@@ -21,6 +21,50 @@ class AppleStatsDashboard {
     this.initElements();
     this.bindEvents();
     this.checkStoredAuth();
+    this.initDynamicLighting();
+  }
+
+  initDynamicLighting() {
+    const pointerGlow = document.getElementById('pointer-glow');
+    if (!pointerGlow) return;
+
+    let targetX = window.innerWidth * 0.5;
+    let targetY = window.innerHeight * 0.32;
+    let currentX = targetX;
+    let currentY = targetY;
+    let lastUserMove = Date.now();
+    let angle = 0;
+
+    const onPointerMove = (e) => {
+      lastUserMove = Date.now();
+      targetX = e.clientX;
+      targetY = e.clientY;
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) {
+        onPointerMove(e.touches[0]);
+      }
+    }, { passive: true });
+
+    // Movimiento orgánico continuo con inercia líquida (lerp)
+    const animateLight = () => {
+      // Si el usuario no mueve el cursor por 2s, la luz oscila con elegancia orgánica
+      if (Date.now() - lastUserMove > 2000) {
+        angle += 0.012;
+        targetX = (window.innerWidth * 0.5) + Math.sin(angle) * (window.innerWidth * 0.28);
+        targetY = (window.innerHeight * 0.36) + Math.cos(angle * 1.5) * (window.innerHeight * 0.20);
+      }
+
+      currentX += (targetX - currentX) * 0.06;
+      currentY += (targetY - currentY) * 0.06;
+
+      pointerGlow.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(animateLight);
+    };
+
+    requestAnimationFrame(animateLight);
   }
 
   initElements() {
@@ -725,12 +769,16 @@ class AppleStatsDashboard {
     if (this.musicStatusPill) {
       if (musicPlays > 0) {
         this.musicStatusPill.textContent = 'Reproducida en el libro';
-        this.musicStatusPill.style.background = 'rgba(255, 255, 255, 0.16)';
-        this.musicStatusPill.style.border = '1px solid rgba(255, 255, 255, 0.35)';
-        this.musicStatusPill.style.color = '#ffffff';
-        this.musicStatusPill.style.boxShadow = '0 0 10px rgba(255, 255, 255, 0.2)';
+        this.musicStatusPill.style.background = 'rgba(48, 209, 88, 0.18)';
+        this.musicStatusPill.style.border = '1px solid rgba(48, 209, 88, 0.35)';
+        this.musicStatusPill.style.color = '#a7f3d0';
+        this.musicStatusPill.style.boxShadow = 'none';
       } else {
         this.musicStatusPill.textContent = 'No reproducida aún';
+        this.musicStatusPill.style.background = 'rgba(255, 255, 255, 0.08)';
+        this.musicStatusPill.style.border = '1px solid rgba(255, 255, 255, 0.12)';
+        this.musicStatusPill.style.color = 'var(--text-secondary)';
+        this.musicStatusPill.style.boxShadow = 'none';
       }
     }
 
@@ -810,7 +858,7 @@ class AppleStatsDashboard {
         <div class="timeline-session-card">
           <div class="timeline-card-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="timeline-badge" style="${isLau ? 'background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.35); color: #ffffff; box-shadow: 0 0 10px rgba(255,255,255,0.15);' : 'background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); color: #cbd5e1;'}">
+              <span class="timeline-badge" style="${isLau ? 'background: rgba(10, 132, 255, 0.18); border-color: rgba(10, 132, 255, 0.35); color: var(--apple-cyan);' : 'background: rgba(255, 159, 10, 0.16); border-color: rgba(255, 159, 10, 0.35); color: #fed7aa;'}">
                 ${isLau ? '👩 Lau' : '👤 Otro Visitante'}
               </span>
               <span class="timeline-badge" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #fff;">
@@ -832,7 +880,7 @@ class AppleStatsDashboard {
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Tiempo de Lectura</span>
-              <span class="tl-item-val" style="color: #ffffff; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.3);">${this.formatDuration(s.totalSeconds)}</span>
+              <span class="tl-item-val" style="color: var(--apple-gold); font-weight: 700;">${this.formatDuration(s.totalSeconds)}</span>
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Página Máxima</span>
@@ -918,8 +966,7 @@ class AppleStatsDashboard {
     localStorage.setItem(analyticsConfig.storageKeys.remoteConfig, JSON.stringify(newConfig));
 
     if (this.settingsNotice) {
-      this.settingsNotice.style.color = '#ffffff';
-      this.settingsNotice.style.textShadow = '0 0 8px rgba(255, 255, 255, 0.4)';
+      this.settingsNotice.style.color = 'var(--apple-green)';
       this.settingsNotice.textContent = '¡Ajustes guardados correctamente!';
     }
 
