@@ -52,8 +52,7 @@ export const bookPages = [
   {
     pageNumber: 1,
     type: "table_of_contents",
-    title: "Índice",
-    watercolorDecor: asset("images/watercolor/cover_wreath.jpg")
+    title: "Índice"
   },
 
   // -------------------------------------------------------------

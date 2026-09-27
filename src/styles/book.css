@@ -402,63 +402,207 @@ body {
   text-align: justify;
 }
 
-/* Estilos de Índice (Pág. 1) */
-.toc-heading {
-  text-align: center;
-  margin-bottom: 16px;
-}
+/* ==========================================================================
+   ESTILOS DE ÍNDICE EDITORIAL DE ALTA GAMA (PÁG. 1)
+   ========================================================================== */
 
-.toc-container {
-  margin: 6px 0;
-}
-
-.chapter-item-btn {
+.page-toc-wrapper {
   display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toc-content-flow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
+  padding: 6px 4px 10px;
+}
+
+.toc-title-area {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.toc-fleuron-ornament {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(197, 155, 63, 0.35);
-  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.toc-main-heading {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: #2e1f27;
+  margin-bottom: 2px;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.toc-subheading {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: #856f7b;
+  letter-spacing: 0.5px;
+}
+
+.toc-editorial-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+
+.toc-entry.chapter-item-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(197, 155, 63, 0.32);
+  border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(70, 50, 30, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 3px 12px rgba(80, 60, 45, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
 }
 
-.chapter-item-btn:hover {
+.toc-entry.chapter-item-btn:hover {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(197, 155, 63, 0.65);
+  box-shadow: 0 6px 20px rgba(197, 155, 63, 0.16), 0 0 12px rgba(212, 175, 55, 0.1);
   transform: translateY(-1.5px);
-  box-shadow: 0 4px 12px rgba(197, 155, 63, 0.18);
-  border-color: var(--gold-warm);
 }
 
-.chapter-item-title {
+.toc-entry.chapter-item-btn:active {
+  transform: scale(0.985);
+}
+
+.toc-entry-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 3px;
+}
+
+.toc-roman {
   font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: 1.12rem;
-  color: #3b2832;
-}
-
-.chapter-item-desc {
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.chapter-item-badge {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   color: var(--gold-warm);
-  font-weight: 600;
-  margin-left: 10px;
+}
+
+.toc-dots-leader {
+  flex: 1;
+  border-bottom: 1.5px dotted rgba(197, 155, 63, 0.45);
+  height: 1px;
+  margin: 0 6px;
+  position: relative;
+  top: -3px;
+}
+
+.toc-page-num {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #3b2832;
   white-space: nowrap;
 }
 
-.toc-wreath-art {
-  max-width: 105px;
-  max-height: 75px;
-  margin: 10px auto 0;
+.toc-badge-soon {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(197, 155, 63, 0.12);
+  color: var(--gold-warm);
+  border: 1px solid rgba(197, 155, 63, 0.3);
+  white-space: nowrap;
+}
+
+.toc-chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #2e1f27;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+
+.toc-chapter-summary {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: #6e5e67;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.toc-entry-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 2px 0;
+  opacity: 0.55;
+}
+
+.toc-sep-line {
+  width: 32px;
+  height: 1px;
+  background: var(--gold-warm);
+}
+
+.toc-sep-mark {
+  font-size: 0.65rem;
+  color: var(--gold-warm);
+}
+
+/* Tarjeta de Dedicatoria Editorial con Hilo Dorado */
+.toc-dedication-vignette {
+  margin-top: auto;
+  padding: 14px 18px;
+  background: rgba(254, 252, 248, 0.78);
+  border: 1px solid rgba(197, 155, 63, 0.28);
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(100, 75, 50, 0.03);
+}
+
+.toc-thread-motif {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.toc-vignette-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: #4a3843;
+  margin-bottom: 4px;
+}
+
+.toc-vignette-signature {
+  font-family: var(--font-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--gold-warm);
 }
 
 /* Portadilla Capítulo I (Pág. 2) */
@@ -1429,6 +1573,65 @@ body {
     padding: 10px 12px;
     margin-bottom: 8px;
   }
+
+  /* Índice Pág. 1 en móvil */
+  .toc-content-flow {
+    padding: 4px 2px 6px;
+  }
+
+  .toc-title-area {
+    margin-bottom: 6px;
+  }
+
+  .toc-main-heading {
+    font-size: 1.45rem;
+  }
+
+  .toc-subheading {
+    font-size: 0.78rem;
+  }
+
+  .toc-editorial-list {
+    gap: 6px;
+    margin: 4px 0 8px;
+  }
+
+  .toc-entry.chapter-item-btn {
+    padding: 9px 12px;
+    border-radius: 10px;
+  }
+
+  .toc-roman {
+    font-size: 0.76rem;
+  }
+
+  .toc-page-num {
+    font-size: 0.85rem;
+  }
+
+  .toc-chapter-title {
+    font-size: 1.05rem;
+  }
+
+  .toc-chapter-summary {
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
+
+  .toc-dedication-vignette {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-top: auto;
+  }
+
+  .toc-vignette-quote {
+    font-size: 0.80rem;
+    line-height: 1.38;
+  }
+
+  .toc-vignette-signature {
+    font-size: 0.70rem;
+  }
 }
 
 /* Teléfonos muy compactos (iPhone SE / pantallas <= 380px) */
@@ -1475,5 +1678,30 @@ body {
   .nav-btn-action {
     padding: 4px 6px;
     font-size: 0.68rem;
+  }
+
+  .toc-main-heading {
+    font-size: 1.25rem;
+  }
+
+  .toc-entry.chapter-item-btn {
+    padding: 7px 10px;
+  }
+
+  .toc-chapter-title {
+    font-size: 0.95rem;
+  }
+
+  .toc-chapter-summary {
+    font-size: 0.68rem;
+  }
+
+  .toc-dedication-vignette {
+    padding: 8px 10px;
+  }
+
+  .toc-vignette-quote {
+    font-size: 0.74rem;
+    line-height: 1.32;
   }
 }
