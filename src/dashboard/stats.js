@@ -153,6 +153,7 @@ class AppleStatsDashboard {
     this.inputWaPhone = document.getElementById('input-wa-phone');
     this.inputWaApiKey = document.getElementById('input-wa-apikey');
     this.btnTestWa = document.getElementById('btn-test-wa');
+    this.btnTestTg = document.getElementById('btn-test-tg');
     this.btnSaveSettings = document.getElementById('btn-save-settings');
     this.btnCancelSettings = document.getElementById('btn-cancel-settings');
     this.btnCloseSettings = document.getElementById('btn-close-settings');
@@ -235,6 +236,10 @@ class AppleStatsDashboard {
 
     if (this.btnTestWa) {
       this.btnTestWa.addEventListener('click', () => this.testWhatsAppNotification());
+    }
+
+    if (this.btnTestTg) {
+      this.btnTestTg.addEventListener('click', () => this.testTelegramNotification());
     }
 
     if (this.btnPurgeAll) {
@@ -952,7 +957,10 @@ class AppleStatsDashboard {
           <div class="timeline-details-row">
             <div class="tl-item">
               <span class="tl-item-lbl">Dispositivo</span>
-              <span class="tl-item-val">${s.device || 'Móvil'} (${s.browser || 'Web'})</span>
+              <span class="tl-item-val" style="font-weight: 600;">
+                ${s.device === 'iPhone' ? '🍎' : (s.os?.includes('Android') ? '🤖' : (s.os?.includes('Windows') ? '💻' : '📱'))} 
+                ${s.deviceModel || s.device || 'Móvil'} (${s.os || 'OS'})
+              </span>
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Tiempo de Lectura</span>
@@ -960,11 +968,15 @@ class AppleStatsDashboard {
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Página Máxima</span>
-              <span class="tl-item-val">${s.completedBook ? 'Libro Completo (100%)' : `Hasta Pág. ${s.maxPageReached || 0}`}</span>
+              <span class="tl-item-val" style="color: var(--apple-green); font-weight: 600;">${s.completedBook ? 'Libro Completo (100%)' : `Hasta Pág. ${s.maxPageReached || 0}`}</span>
             </div>
             <div class="tl-item">
               <span class="tl-item-lbl">Música Taylor</span>
-              <span class="tl-item-val">${s.musicPlayed ? `Escuchó ${this.formatDuration(s.musicDurationSec)}` : 'No'}</span>
+              <span class="tl-item-val">${s.musicPlayed ? `Escuchó 🎶 (${this.formatDuration(s.musicDurationSec)})` : 'No reproducida'}</span>
+            </div>
+            <div class="tl-item">
+              <span class="tl-item-lbl">Ubicación</span>
+              <span class="tl-item-val">📍 ${s.location?.city || 'Bogotá'}, ${s.location?.country || 'Colombia'}</span>
             </div>
           </div>
 
@@ -1079,6 +1091,53 @@ class AppleStatsDashboard {
     }
   }
 
+  async testTelegramNotification() {
+    if (this.settingsNotice) {
+      this.settingsNotice.style.color = '#38bdf8';
+      this.settingsNotice.textContent = 'Enviando alerta de prueba a tu Telegram...';
+    }
+
+    try {
+      const cfg = this.getRemoteConfig();
+      const remoteUrl = (cfg.firebaseUrl || 'https://libro-lau-default-rtdb.firebaseio.com').replace(/\/$/, '');
+      const res = await fetch(`${remoteUrl}/config/telegram.json`);
+      if (!res.ok) throw new Error('No se pudo leer la configuración de Telegram');
+      const tgCfg = await res.json();
+
+      if (!tgCfg || !tgCfg.botToken || !tgCfg.chatId) {
+        throw new Error('Telegram no tiene botToken o chatId configurado');
+      }
+
+      const testMsg = "✅ *¡Alerta de Prueba — Panel de Métricas Libro de Lau!*\n\nTu bot de Telegram está 100% conectado. Recibirás avisos aquí sin importar si Lau entra desde un iPhone, Android o Computador. 📖💖";
+      const tgUrl = `https://api.telegram.org/bot${tgCfg.botToken}/sendMessage`;
+
+      const postRes = await fetch(tgUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: tgCfg.chatId,
+          text: testMsg,
+          parse_mode: 'Markdown'
+        })
+      });
+
+      const data = await postRes.json();
+      if (data.ok) {
+        if (this.settingsNotice) {
+          this.settingsNotice.style.color = 'var(--apple-green)';
+          this.settingsNotice.textContent = '✅ ¡Mensaje de prueba enviado a tu Telegram con éxito!';
+        }
+      } else {
+        throw new Error(data.description || 'Error de Telegram');
+      }
+    } catch (e) {
+      if (this.settingsNotice) {
+        this.settingsNotice.style.color = 'var(--apple-rose)';
+        this.settingsNotice.textContent = 'Error al probar Telegram: ' + e.message;
+      }
+    }
+  }
+
   async saveSettings() {
     const firebaseUrl = (this.inputFirebase?.value || '').trim() || 'https://libro-lau-default-rtdb.firebaseio.com';
     const customPin = (this.inputPin?.value || '').trim() || '2709';
@@ -1086,7 +1145,7 @@ class AppleStatsDashboard {
     const waPhone = (this.inputWaPhone?.value || '').trim();
     const waApiKey = (this.inputWaApiKey?.value || '').trim();
 
-    const newConfig = {
+    const patchConfig = {
       firebaseUrl,
       customPin,
       whatsapp: {
@@ -1096,15 +1155,15 @@ class AppleStatsDashboard {
       }
     };
 
-    localStorage.setItem(analyticsConfig.storageKeys.remoteConfig, JSON.stringify(newConfig));
+    localStorage.setItem(analyticsConfig.storageKeys.remoteConfig, JSON.stringify(patchConfig));
 
-    // Guardar en Firebase para que el libro de Lau lo use al ejecutarse en su teléfono
+    // Guardar en Firebase usando PATCH para preservar la configuración de Telegram
     try {
       const remoteUrl = firebaseUrl.replace(/\/$/, '');
       await fetch(`${remoteUrl}/config.json`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newConfig)
+        body: JSON.stringify(patchConfig)
       });
     } catch (e) {
       console.warn("No se pudo sincronizar config en Firebase:", e);
