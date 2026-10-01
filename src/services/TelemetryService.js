@@ -630,18 +630,15 @@ export class TelemetryService {
       const res = await fetch(`${remote.url}/config.json`);
       if (!res.ok) return;
       const config = await res.json();
-      if (!config || !config.whatsapp || !config.whatsapp.enabled) return;
-
-      const { phone, apiKey } = config.whatsapp;
-      if (!phone || !apiKey) return;
+      if (!config) return;
 
       // 1. Alerta Inmediata de Apertura (Con margen de 15 mins para evitar spam si refresca la página)
-      const lastAlertTime = parseInt(localStorage.getItem('wa_last_open_alert') || '0', 10);
+      const lastAlertTime = parseInt(localStorage.getItem('alert_last_open_time') || '0', 10);
       const isRecent = (Date.now() - lastAlertTime) < (15 * 60 * 1000);
 
-      if (!sessionStorage.getItem('wa_notified_open') && !isRecent) {
-        sessionStorage.setItem('wa_notified_open', 'true');
-        localStorage.setItem('wa_last_open_alert', Date.now().toString());
+      if (!sessionStorage.getItem('alert_notified_open') && !isRecent) {
+        sessionStorage.setItem('alert_notified_open', 'true');
+        localStorage.setItem('alert_last_open_time', Date.now().toString());
 
         const loc = this.session.location?.city ? `${this.session.location.city}, ${this.session.location.country}` : 'Bogotá, Colombia';
         const time = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
@@ -652,15 +649,18 @@ export class TelemetryService {
           `• *Hora:* ${time}\n\n` +
           `👉 *Sigue su lectura en vivo:* https://alejandro18000.github.io/libro-lau/stats.html`;
 
-        this.sendWhatsAppMessage(phone, apiKey, openMsg);
-
-        // Alerta directa de Telegram si está configurado
+        // Alerta directa de Telegram (Prioridad #1, instantánea y sin bloqueos)
         if (config.telegram && config.telegram.enabled && config.telegram.botToken && config.telegram.chatId) {
           this.sendTelegramMessage(config.telegram.botToken, config.telegram.chatId, openMsg);
         }
+
+        // Alerta secundaria de WhatsApp si está configurado
+        if (config.whatsapp && config.whatsapp.enabled && config.whatsapp.phone && config.whatsapp.apiKey) {
+          this.sendWhatsAppMessage(config.whatsapp.phone, config.whatsapp.apiKey, openMsg);
+        }
       }
     } catch (e) {
-      console.warn("WhatsApp alert error:", e);
+      console.warn("Alert trigger error:", e);
     }
   }
 
@@ -676,10 +676,7 @@ export class TelemetryService {
       const res = await fetch(`${remote.url}/config.json`);
       if (!res.ok) return;
       const config = await res.json();
-      if (!config || !config.whatsapp || !config.whatsapp.enabled) return;
-
-      const { phone, apiKey } = config.whatsapp;
-      if (!phone || !apiKey) return;
+      if (!config) return;
 
       sessionStorage.setItem('wa_summary_sent', 'true');
 
@@ -696,10 +693,14 @@ export class TelemetryService {
         `• 🚶‍♀️ *Ritmo de lectura:* ${this.session.readingPace || 'Lectura pausada'}\n\n` +
         `🔗 *Ver estadísticas completas:* https://alejandro18000.github.io/libro-lau/stats.html`;
 
-      this.sendWhatsAppMessage(phone, apiKey, summaryMsg);
-
+      // 1. Envío prioritario a Telegram
       if (config.telegram && config.telegram.enabled && config.telegram.botToken && config.telegram.chatId) {
         this.sendTelegramMessage(config.telegram.botToken, config.telegram.chatId, summaryMsg);
+      }
+
+      // 2. Envío a WhatsApp si está configurado
+      if (config.whatsapp && config.whatsapp.enabled && config.whatsapp.phone && config.whatsapp.apiKey) {
+        this.sendWhatsAppMessage(config.whatsapp.phone, config.whatsapp.apiKey, summaryMsg);
       }
     } catch(e) {}
   }
