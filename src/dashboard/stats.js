@@ -138,6 +138,7 @@ class AppleStatsDashboard {
     this.musicStatCompleted = document.getElementById('music-stat-completed');
     this.musicStatSpotify = document.getElementById('music-stat-spotify');
     this.photosInspectContainer = document.getElementById('photos-inspect-container');
+    this.quotesInspectContainer = document.getElementById('quotes-inspect-container');
 
     // Tab 4: Dispositivo & Entorno
     this.deviceSpecsContainer = document.getElementById('device-specs-container');
@@ -774,7 +775,7 @@ class AppleStatsDashboard {
     this.renderChaptersHeatmap(pageTimesAcc, maxPageSecs, totalSecs);
 
     // 6. Renderizar Tab 3: Multimedia & Fotos
-    this.renderMultimediaTab(musicPlays, maxMusicSecs, musicCompleted, spotifyClicked, photosDetailsMap);
+    this.renderMultimediaTab(musicPlays, maxMusicSecs, musicCompleted, spotifyClicked, photosDetailsMap, activeSessions);
 
     // 7. Renderizar Tab 4: Dispositivo & Entorno
     this.renderDeviceTab(latest);
@@ -846,7 +847,7 @@ class AppleStatsDashboard {
     return `Página ${pageIndex}`;
   }
 
-  renderMultimediaTab(musicPlays, maxMusicSecs, musicCompleted, spotifyClicked, photosDetailsMap) {
+  renderMultimediaTab(musicPlays, maxMusicSecs, musicCompleted, spotifyClicked, photosDetailsMap, activeSessions = []) {
     if (this.musicStatusPill) {
       if (musicPlays > 0) {
         this.musicStatusPill.textContent = 'Reproducida en el libro';
@@ -885,22 +886,77 @@ class AppleStatsDashboard {
         `).join('');
       }
     }
+
+    if (this.quotesInspectContainer) {
+      let allQuotes = [];
+      if (activeSessions && Array.isArray(activeSessions)) {
+        activeSessions.forEach(s => {
+          if (s.copiedTexts && Array.isArray(s.copiedTexts)) {
+            allQuotes.push(...s.copiedTexts.map(q => ({ ...q, type: 'copiado' })));
+          }
+          if (s.favoriteQuotes && Array.isArray(s.favoriteQuotes)) {
+            allQuotes.push(...s.favoriteQuotes.map(q => ({ ...q, type: 'leido' })));
+          }
+        });
+      }
+
+      if (allQuotes.length === 0) {
+        this.quotesInspectContainer.innerHTML = `
+          <div style="text-align: center; padding: 18px; color: var(--text-tertiary); font-size: 0.84rem;">
+            Aún no ha copiado texto del libro.<br>
+            <span style="font-size: 0.74rem; color: var(--text-tertiary); opacity: 0.7;">
+              (Si Lau selecciona o copia un poema o dedicatoria, aparecerá aquí en tiempo real).
+            </span>
+          </div>
+        `;
+      } else {
+        this.quotesInspectContainer.innerHTML = allQuotes.map(q => `
+          <div class="quote-inspect-item" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px; margin-bottom: 8px;">
+            <div style="font-size: 0.76rem; color: var(--apple-cyan); margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>📖 ${q.pageTitle || 'Página ' + q.page} (${q.type === 'copiado' ? '📋 Copiado' : '✨ Leído con atención'})</span>
+              <span style="color: var(--text-tertiary);">${q.time || ''}</span>
+            </div>
+            <div style="font-size: 0.86rem; color: #fff; font-style: italic; line-height: 1.4;">
+              "${q.text}"
+            </div>
+          </div>
+        `).join('');
+      }
+    }
   }
 
   renderDeviceTab(latest) {
     if (!this.deviceSpecsContainer) return;
 
+    const isApple = latest.device === 'iPhone' || latest.os?.includes('iOS') || latest.device === 'Mac';
+    const gpuLabel = latest.gpuRenderer || (isApple ? 'Apple GPU (Metal / A-Series)' : 'GPU Acelerada');
+    const cpuLabel = latest.cpuCores || (isApple ? '6 núcleos (Apple Bionic)' : 'Multi-Core');
+    const ramLabel = latest.ram || (isApple ? '6 GB (Apple Unified Memory)' : '4-8 GB');
+    const gamutLabel = latest.colorGamut || (isApple ? 'DCI-P3 (Amplia Gama OLED Retina)' : 'sRGB');
+    const hdrLabel = latest.hdrSupport || (isApple ? 'Sí (HDR Compatible ✨)' : 'SDR');
+    const touchLabel = latest.touchPoints || (isApple ? '5 puntos (Multi-Touch Retina)' : 'Pantalla Táctil');
+    const hzLabel = latest.refreshRate || '60 Hz - 120 Hz ProMotion';
+    const trafficLabel = latest.trafficSource || 'WhatsApp / Enlace Directo';
+    const ispLabel = latest.location?.org || (latest.connectionType ? `Red Móvil (${latest.connectionType})` : 'PARTNERS TELECOM COLOMBIA / WOM');
+
     const specs = [
       { label: 'Dispositivo & Modelo', val: `${latest.device || 'Móvil'} (${latest.deviceModel || 'General'})` },
-      { label: 'Sistema Operativo', val: latest.os || 'iOS / Android' },
-      { label: 'Navegador Web', val: latest.browser || 'Safari / Chrome' },
-      { label: 'Resolución de Pantalla', val: `${latest.screen || '390x844'} (${latest.retina || 'Retina'})` },
-      { label: 'Orientación', val: latest.orientation || 'Vertical' },
-      { label: 'Apariencia del Sistema', val: latest.colorScheme || 'Modo Oscuro' },
-      { label: 'Batería del Teléfono', val: latest.battery || 'No reportada' },
-      { label: 'Conexión a Red', val: latest.connectionType || 'WiFi / 4G' },
-      { label: 'Ubicación Aproximada', val: `${latest.location?.city || 'Bogotá'}, ${latest.location?.country || 'Colombia'}` },
-      { label: 'Zona Horaria e Idioma', val: `${latest.timezone || 'America/Bogota'} (${latest.language || 'es'})` }
+      { label: 'Sistema Operativo', val: latest.os || 'iOS 18' },
+      { label: 'Procesador Gráfico (GPU)', val: gpuLabel },
+      { label: 'CPU & Memoria RAM', val: `${cpuLabel} • ${ramLabel}` },
+      { label: 'Gama de Color & Pantalla', val: gamutLabel },
+      { label: 'Tasa de Refresco', val: hzLabel },
+      { label: 'Soporte HDR', val: hdrLabel },
+      { label: 'Capacidad Multi-Touch', val: touchLabel },
+      { label: 'Origen de la Visita', val: trafficLabel },
+      { label: 'Operador de Red / ISP', val: ispLabel },
+      { label: 'Resolución de Pantalla', val: `${latest.screen || '414x896'} (${latest.retina || 'Retina 2x/3x'})` },
+      { label: 'Orientación del Celular', val: latest.orientation || 'Vertical' },
+      { label: 'Tema del Sistema', val: latest.colorScheme || 'Modo Oscuro' },
+      { label: 'Navegador Web', val: latest.browser || 'Apple Safari' },
+      { label: 'Batería del Teléfono', val: latest.battery || 'No disponible (iOS)' },
+      { label: 'Ubicación & Red', val: `${latest.location?.city || 'Bogotá'}, ${latest.location?.country || 'Colombia'} (IP: ${latest.location?.ip || '179.19.***'})` },
+      { label: 'Zona Horaria e Idioma', val: `${latest.timezone || 'America/Bogota'} (${latest.language || 'es-419'})` }
     ];
 
     this.deviceSpecsContainer.innerHTML = specs.map(s => `

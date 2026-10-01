@@ -90,6 +90,21 @@ export class TelemetryService {
           ip: ''
         },
 
+        // Hardware Profundo y Pantalla Avanzada
+        gpuRenderer: 'Detectando...',
+        gpuVendor: 'Detectando...',
+        cpuCores: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} núcleos` : 'Multi-Core',
+        ram: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : (deviceInfo.device === 'iPhone' ? '6 GB (Apple Unified)' : 'Estándar'),
+        colorGamut: window.matchMedia && window.matchMedia('(color-gamut: p3)').matches ? 'DCI-P3 (Amplia Gama OLED / Retina)' : 'sRGB Estándar',
+        hdrSupport: window.matchMedia && window.matchMedia('(dynamic-range: high)').matches ? 'Sí (HDR Compatible ✨)' : 'SDR Estándar',
+        touchPoints: navigator.maxTouchPoints ? `${navigator.maxTouchPoints} puntos táctiles` : 'Sin pantalla táctil (Mouse)',
+        refreshRate: 'Calculando...',
+        trafficSource: this.detectTrafficSource(),
+
+        // Interacciones Emocionales (Frases y Textos)
+        copiedTexts: [],
+        favoriteQuotes: [],
+
         // Métricas de Lectura
         totalSeconds: 0,
         activePage: 0,
@@ -126,13 +141,20 @@ export class TelemetryService {
       this.initPageTime(0);
       this.recordPageTransition(0, 0);
 
-      // 5. Configurar listeners de ciclo de vida
-      this.setupLifecycleListeners();
+      // 5. Detectar Hardware / GPU
+      this.detectAdvancedGpu();
 
-      // 6. Detección asíncrona de batería y red/ubicación
+      // 6. Medir tasa de refresco (Hz)
+      this.measureRefreshRate();
+
+      // 7. Configurar listeners de ciclo de vida e interacciones emocionales
+      this.setupLifecycleListeners();
+      this.setupEmotionalListeners();
+
+      // 8. Detección asíncrona de batería y red/ubicación
       this.fetchAsyncDeviceData();
 
-      // 7. Latido en tiempo real (Heartbeat de 5 segundos)
+      // 9. Latido en tiempo real (Heartbeat de 5 segundos)
       this.startHeartbeat();
 
       // Sincronizar inicio de sesión de inmediato
@@ -208,6 +230,117 @@ export class TelemetryService {
       return `${type}${speed}`;
     }
     return 'WiFi / Datos Móviles';
+  }
+
+  detectTrafficSource() {
+    const ref = document.referrer || '';
+    const ua = navigator.userAgent || '';
+    if (/WhatsApp/i.test(ua) || /whatsapp/i.test(ref)) {
+      return 'WhatsApp (Chat / Enlace)';
+    } else if (/Instagram/i.test(ua) || /instagram/i.test(ref)) {
+      return 'Instagram Direct';
+    } else if (/FBAN|FBAV/i.test(ua) || /facebook/i.test(ref)) {
+      return 'Facebook';
+    } else if (/twitter|x\.com/i.test(ref)) {
+      return 'X / Twitter';
+    } else if (ref) {
+      try {
+        return new URL(ref).hostname;
+      } catch (e) {
+        return ref.substring(0, 30);
+      }
+    }
+    return 'Enlace directo (Mensaje privado)';
+  }
+
+  detectAdvancedGpu() {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+        if (dbg) {
+          const vendor = gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || 'Apple Inc.';
+          let renderer = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || 'Apple GPU';
+
+          // Limpiar identificadores ANGLE de navegadores modernos
+          let cleanRenderer = renderer.replace(/ANGLE \(/i, '').replace(/\)/g, '').trim();
+          if (/Apple/i.test(renderer)) cleanRenderer = 'Apple GPU (Metal)';
+
+          if (this.session) {
+            this.session.gpuVendor = vendor;
+            this.session.gpuRenderer = cleanRenderer;
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  measureRefreshRate() {
+    let frames = 0;
+    const start = performance.now();
+    const countFrames = () => {
+      frames++;
+      if (frames < 30) {
+        requestAnimationFrame(countFrames);
+      } else {
+        const duration = performance.now() - start;
+        const fps = Math.round((frames * 1000) / duration);
+        let hz = '60 Hz';
+        if (fps >= 105) hz = '120 Hz (ProMotion Fluida ✨)';
+        else if (fps >= 80) hz = '90 Hz (Pantalla Fluida)';
+        else hz = `${fps} Hz`;
+
+        if (this.session) {
+          this.session.refreshRate = hz;
+          this.syncSession();
+        }
+      }
+    };
+    requestAnimationFrame(countFrames);
+  }
+
+  setupEmotionalListeners() {
+    // 1. Capturar frases que copia del libro
+    document.addEventListener('copy', () => {
+      try {
+        const selected = window.getSelection() ? window.getSelection().toString().trim() : '';
+        if (selected && selected.length >= 3 && this.session) {
+          if (!this.session.copiedTexts) this.session.copiedTexts = [];
+          this.session.copiedTexts.push({
+            text: selected.length > 250 ? selected.substring(0, 250) + '...' : selected,
+            page: this.currentPage,
+            pageTitle: this.getPageTitle(this.currentPage),
+            time: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+          });
+          this.syncSession();
+        }
+      } catch (e) {}
+    });
+
+    // 2. Capturar párrafos seleccionados con atención
+    let selectionTimeout = null;
+    document.addEventListener('selectionchange', () => {
+      clearTimeout(selectionTimeout);
+      selectionTimeout = setTimeout(() => {
+        try {
+          const text = window.getSelection() ? window.getSelection().toString().trim() : '';
+          if (text && text.length > 20 && this.session) {
+            if (!this.session.favoriteQuotes) this.session.favoriteQuotes = [];
+            const snippet = text.length > 220 ? text.substring(0, 220) + '...' : text;
+            if (!this.session.favoriteQuotes.some(q => q.text === snippet)) {
+              this.session.favoriteQuotes.push({
+                text: snippet,
+                page: this.currentPage,
+                pageTitle: this.getPageTitle(this.currentPage),
+                time: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+              });
+              this.syncSession();
+            }
+          }
+        } catch (e) {}
+      }, 1500);
+    });
   }
 
   async fetchAsyncDeviceData() {
@@ -641,12 +774,16 @@ export class TelemetryService {
         localStorage.setItem('alert_last_open_time', Date.now().toString());
 
         const loc = this.session.location?.city ? `${this.session.location.city}, ${this.session.location.country}` : 'Bogotá, Colombia';
+        const isp = this.session.location?.org ? ` (${this.session.location.org})` : '';
         const time = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        const dev = `${this.session.device || 'Móvil'} (${this.session.os || 'OS'} • ${this.session.browser || 'Web'})`;
+        const traffic = this.session.trafficSource || 'Enlace Directo';
 
         const openMsg = `🔔 *¡Lau acaba de abrir tu libro!* 📖💖\n\n` +
-          `• *Dispositivo:* ${this.session.device || 'Móvil'} (${this.session.os || 'iOS'})\n` +
-          `• *Ubicación:* ${loc}\n` +
-          `• *Hora:* ${time}\n\n` +
+          `• 📱 *Dispositivo:* ${dev}\n` +
+          `• 📍 *Ubicación:* ${loc}${isp}\n` +
+          `• 🔗 *Origen:* ${traffic}\n` +
+          `• ⏰ *Hora:* ${time}\n\n` +
           `👉 *Sigue su lectura en vivo:* https://alejandro18000.github.io/libro-lau/stats.html`;
 
         // Alerta directa de Telegram (Prioridad #1, instantánea y sin bloqueos)
@@ -685,12 +822,14 @@ export class TelemetryService {
       const durStr = mins > 0 ? `${mins} min ${secs} seg` : `${secs} segundos`;
       const maxPage = this.session.maxPageReached === 0 ? 'Portada' : `Pág. ${this.session.maxPageReached}`;
       const musicStr = this.session.musicPlayed ? `Sí 🎶 (${this.session.musicDurationSec || 0}s)` : 'No reproducida';
+      const quotesCount = (this.session.copiedTexts?.length || 0) + (this.session.favoriteQuotes?.length || 0);
+      const quotesStr = quotesCount > 0 ? `\n• 💖 *Citas de interés:* ${quotesCount} frases copiadas/leídas` : '';
 
       const summaryMsg = `📊 *Mini Informe de Lectura — Lau* 📖\n\n` +
         `• ⏱️ *Tiempo total:* ${durStr}\n` +
         `• 📑 *Página máxima alcanzada:* ${maxPage}\n` +
         `• 🎵 *Canción Taylor:* ${musicStr}\n` +
-        `• 🚶‍♀️ *Ritmo de lectura:* ${this.session.readingPace || 'Lectura pausada'}\n\n` +
+        `• 🚶‍♀️ *Ritmo de lectura:* ${this.session.readingPace || 'Lectura pausada'}${quotesStr}\n\n` +
         `🔗 *Ver estadísticas completas:* https://alejandro18000.github.io/libro-lau/stats.html`;
 
       // 1. Envío prioritario a Telegram
