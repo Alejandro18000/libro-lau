@@ -12,15 +12,12 @@ import { AudioController } from './components/AudioController.js';
 import { BookRenderer } from './components/BookRenderer.js';
 import { Lightbox } from './components/Lightbox.js';
 import { ChaptersModal } from './components/ChaptersModal.js';
-import { telemetry } from './services/TelemetryService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Inicializar auxiliares
   const petals = new PetalsEffect('petals-canvas');
   const audioController = new AudioController(bookMetadata.songDetails);
   const lightbox = new Lightbox();
-  lightbox.onOpen(({ caption, src }) => telemetry.onPhotoOpen(caption, src));
-  lightbox.onClose(() => telemetry.onPhotoClose());
 
   // 2. Renderizar páginas
   const renderer = new BookRenderer('flipbook');
@@ -118,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // 1. Gesto de Deslizamiento (Swipe horizontal claro)
       if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.3 && duration < 600) {
         lastTouchHandledTime = Date.now();
-        telemetry.onSwipe();
         if (diffX < 0) {
           safeFlipNext();
         } else {
@@ -136,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         lastTouchHandledTime = Date.now();
-        telemetry.onTap();
 
         // Si el libro está cerrado en portada, cualquier toque abre el libro al Índice (Pág. 1)
         if (pageFlip.getCurrentPageIndex() === 0) {
@@ -157,14 +152,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Clic en escritorio para avanzar / retroceder tocando los lados del libro
   bookEl.addEventListener('click', (e) => {
-    // Si fue precedido por un evento táctil en móvil, omitir clic sintético
     if (Date.now() - lastTouchHandledTime < 500) return;
 
     const target = e.target;
     const isInteractive = target.closest('button, a, .clean-photo-frame, .chapter-item-btn, #track-progress-bar, .spotify-btn-action, input, select');
     if (isInteractive) return;
 
-    // Si el libro está cerrado en portada, un clic lo abre al Índice (Pág. 1)
     if (pageFlip.getCurrentPageIndex() === 0) {
       safeFlipTo(1);
       return;
@@ -232,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
     flipLockUntil = Date.now() + 150;
     audioController.playFlipSound();
     updateNavigation(pageIndex, totalPages);
-    telemetry.onPageFlip(pageIndex, totalPages);
 
     // Revisar si la página visible actual es la página de la canción (Pág. 8)
     const activePages = [pageIndex, pageIndex + 1];
@@ -258,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!canFlip()) return;
       if (pageFlip.getCurrentPageIndex() !== 0) return;
 
-      safeFlipTo(1); // Abre explícitamente a la Página 1 (Índice)
+      safeFlipTo(1);
     });
   }
 
@@ -287,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const caption = frame.getAttribute('data-caption');
       if (src) {
         lightbox.open(src, caption);
-        telemetry.onPhotoZoom(caption);
       }
     });
   });
@@ -332,7 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const isFull = !!document.fullscreenElement;
       fullscreenBtn.classList.toggle('active', isFull);
       fullscreenBtn.title = isFull ? "Salir de pantalla completa" : "Pantalla completa";
-      telemetry.onFullscreenToggle(isFull);
     });
   }
 
@@ -353,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnOpenSpotifyDirect) {
     btnOpenSpotifyDirect.addEventListener('click', (e) => {
       e.stopPropagation();
-      telemetry.onSpotifyClick();
     });
   }
 
@@ -368,9 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   audioController.onStateChange((state) => {
-    if (state.isPlaying) {
-      telemetry.onMusicPlay();
-    }
     if (btnTrackPlay) {
       btnTrackPlay.textContent = state.isPlaying ? '⏸' : '▶';
     }
@@ -384,9 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   audioController.onTimeUpdate(({ current, percent, formattedCurrent, formattedDuration }) => {
-    if (current) {
-      telemetry.onMusicTimeUpdate(current);
-    }
     if (trackProgressFill) {
       trackProgressFill.style.width = `${percent}%`;
     }
@@ -399,7 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (openTocBtn) {
     openTocBtn.addEventListener('click', () => {
       chaptersModal.open();
-      telemetry.onTocOpen();
     });
   }
   if (pageIndicator) {
@@ -407,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
     pageIndicator.title = 'Abrir índice de capítulos';
     pageIndicator.addEventListener('click', () => {
       chaptersModal.open();
-      telemetry.onTocOpen();
     });
   }
 });

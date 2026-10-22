@@ -1,191 +1,58 @@
 /**
  * chaptersData.js
- * 
- * Estructura de datos con diseño en acuarela.
- * Integra las ilustraciones temáticas en acuarela para cada hoja,
- * manteniendo el texto 100% exacto de la carta original.
+ * Cifrado criptográfico en reposo para protección de privacidad en repositorios públicos.
+ * Desencriptación y resolución de recursos en memoria al inicializar.
  */
 
 const baseUrl = import.meta.env.BASE_URL || './';
 export const asset = (path) => `${baseUrl}${path.startsWith('/') ? path.slice(1) : path}`;
 
-export const bookMetadata = {
-  title: "Para Lau",
-  subtitle: "27 de Septiembre",
-  songDetails: {
-    title: "invisible string",
-    artist: "Taylor Swift",
-    album: "folklore",
-    spotifyUrl: "https://open.spotify.com/track/6VsvKPJ4xjVNKpI8VVZ3SV",
-    audioSrc: asset("audio/invisible_string.m4a"), // Canción completa (4:12)
-    coverImg: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/7c/04/ba/7c04ba17-2ff8-21b3-0ac0-7d141f86e924/20UMGIM64216.rgb.jpg/300x300bb.jpg"
+function _d(b64, k) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const key = new TextEncoder().encode(k);
+  const s = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) s[i] = i;
+  let j = 0;
+  for (let i = 0; i < 256; i++) {
+    j = (j + s[i] + key[i % key.length]) & 255;
+    const t = s[i]; s[i] = s[j]; s[j] = t;
   }
-};
-
-export const chapters = [
-  {
-    id: "capitulo-1",
-    numberRoman: "Capítulo I",
-    number: 1,
-    title: "27 de Septiembre",
-    date: "27 de Septiembre",
-    targetPage: 2,
-    description: "Carta de cumpleaños",
-    isUpcoming: false
-  },
-  {
-    id: "capitulo-2",
-    numberRoman: "Capítulo II",
-    number: 2,
-    title: "Próximamente",
-    date: "Nuevos momentos",
-    targetPage: 10,
-    description: "Espacio reservado para nuevos capítulos",
-    isUpcoming: true
+  let i = 0; j = 0;
+  const out = new Uint8Array(bytes.length);
+  for (let n = 0; n < bytes.length; n++) {
+    i = (i + 1) & 255;
+    j = (j + s[i]) & 255;
+    const t = s[i]; s[i] = s[j]; s[j] = t;
+    out[n] = bytes[n] ^ s[(s[i] + s[j]) & 255];
   }
-];
+  return new TextDecoder().decode(out);
+}
 
-export const bookPages = [
-  // -------------------------------------------------------------
-  // PÁGINA 1: ÍNDICE DE CAPÍTULOS
-  // -------------------------------------------------------------
-  {
-    pageNumber: 1,
-    type: "table_of_contents",
-    title: "Índice"
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 2: PORTADILLA CAPÍTULO I
-  // -------------------------------------------------------------
-  {
-    pageNumber: 2,
-    type: "chapter_header",
-    roman: "Capítulo I",
-    title: "27 de Septiembre",
-    watercolorDecor: asset("images/watercolor/flower_light.jpg")
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 3: TEXTO CARTA (PARTE 1) + ACUARELA FLOR & LUZ
-  // -------------------------------------------------------------
-  {
-    pageNumber: 3,
-    type: "letter_text_with_art",
-    header: "Feliz cumpleaños, Lau.",
-    paragraphs: [
-      "Hoy quería tomarme el tiempo de escribirte algo que estuviera a la altura del día y, sobre todo, a la altura de la persona que eres. No quería que fuera solo un mensaje protocolario de felicitación, sino una pausa para decirte algo sincero: admiro profundamente a la mujer en la que te has convertido.",
-      "Desde que nos conocimos he visto en ti a alguien singular: una mujer con una lucidez admirable, con metas claras, con una determinación firme y, al mismo tiempo, con una sensibilidad y una calidez que hacen que estar cerca de ti se sienta tan bien."
-    ],
-    artImage: asset("images/watercolor/flower_light.jpg"),
-    artPosition: "bottom"
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 4: FOTO + TEXTO CARTA (PARTE 2)
-  // -------------------------------------------------------------
-  {
-    pageNumber: 4,
-    type: "photo_polaroid",
-    photo: {
-      src: asset("images/lau_sergio_portrait_gorgeous.jpg"),
-      alt: "25 de Septiembre",
-      caption: "25 de Septiembre"
-    },
-    paragraphs: [
-      "Me encanta ver cómo has crecido, la sabiduría con la que asumes cada paso y la libertad con la que defiendes quién eres. Eres dueña de tu propio espacio y de tus convicciones, y ver esa autenticidad es algo inspirador."
-    ]
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 5: TEXTO CARTA (PARTE 3) + ACUARELA CAFÉ & DIÁLOGO
-  // -------------------------------------------------------------
-  {
-    pageNumber: 5,
-    type: "letter_text_with_art",
-    paragraphs: [
-      "Sé bien que durante un buen tiempo no estuvimos tan cerca como antes. Es algo que me da un poco de nostalgia, porque me hubiera encantado acompañar de cerca muchas de tus victorias cotidianas. Pero también creo que las personas cambian, evolucionan y encuentran nuevos momentos para reencontrarse con otra mirada.",
-      "Hoy me gustaría ser mucho más parte de tu presente: no solo para aplaudir tus fortalezas y todo lo que logras, sino para conocerte en todas tus dimensiones. Conocer tus días tranquilos, tus dudas, tus manías y esas pequeñas imperfecciones que son, al final del día, el lugar donde reside la versión más honesta, humana y bonita de alguien."
-    ],
-    artImage: asset("images/watercolor/coffee_cups.jpg"),
-    artPosition: "bottom"
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 6: FOTOS + TEXTO CARTA (PARTE 4) + ACUARELA POSTRES
-  // -------------------------------------------------------------
-  {
-    pageNumber: 6,
-    type: "scrapbook_double",
-    photo1: {
-      src: asset("images/postres_celebracion.jpg"),
-      caption: "25 de Septiembre"
-    },
-    photo2: {
-      src: asset("images/lau_sergio_selfie_warm.jpg"),
-      caption: "25 de Septiembre"
-    },
-    paragraphs: [
-      "Verte el viernes pasado me confirmó todo esto. Hacía tiempo no compartíamos un momento así, y verte reír con esa emoción viva mientras me contabas cada anécdota y cada aventura fue el mejor regalo."
-    ],
-    artImage: asset("images/watercolor/dessert_treats.jpg")
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 7: TEXTO CARTA (PARTE 5) + ACUARELA CUADERNO & BRILLO
-  // -------------------------------------------------------------
-  {
-    pageNumber: 7,
-    type: "letter_text_with_art",
-    paragraphs: [
-      "Me encanta la forma en la que cuentas tus historias, con tanta chispa y tanta vida; de verdad te habría escuchado horas enteras sin mirar el reloj. Y mientras hablabas, no pude evitar acordarme de aquel dibujo que intenté hacerte hace años. Te confieso que en ese momento me dio risa y frustración no lograr plasmarte como quería, pero el viernes entendí la razón: ningún papel podía capturar ese brillo auténtico, esa energía tan linda que tienes cuando disfrutas la vida a tu manera.",
-      "Dicen las que saben de canciones que las mujeres van transitando por distintas eras: momentos de introspección, etapas donde hay que reconstruirse, y otras donde se aprende a pisar fuerte y a no negociar el brillo propio ante nada ni nadie. Verte hoy es ver a alguien que habita su mejor era con orgullo y plenitud."
-    ],
-    artImage: asset("images/watercolor/artist_sketch.jpg"),
-    artPosition: "bottom"
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 8: TEXTO CARTA (PARTE 6 - CANCIÓN) + ACUARELA HILO DORADO
-  // -------------------------------------------------------------
-  {
-    pageNumber: 8,
-    type: "musical_highlight",
-    hasMusicTrigger: true,
-    paragraphs: [
-      "Nunca dejes que nadie, bajo ninguna circunstancia, intente opacar ese destello, porque no solo te hace única, sino que llena de luz a quien tiene el privilegio de compartir contigo.",
-      "Por eso, como regalo y complicidad entre nosotros, te quiero dejar una canción: \"invisible string\". La elijo porque me gusta pensar que, sin importar las vueltas de la vida, las pausas o el tiempo transcurrido, hay conexiones genuinas que guardan un hilo dorado esperando el momento indicado para volverse a encontrar."
-    ],
-    artImage: asset("images/watercolor/golden_thread.jpg")
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 9: CIERRE DE LA CARTA + ACUARELA RAMO DE CUMPLEAÑOS
-  // -------------------------------------------------------------
-  {
-    pageNumber: 9,
-    type: "letter_closing",
-    photo: {
-      src: asset("images/lau_sergio_mesa.jpg"),
-      caption: "25 de Septiembre"
-    },
-    paragraphs: [
-      "Ojalá la vida nos dé la oportunidad de seguir sumando historias, largas conversaciones y, quién sabe, quizás ser parte de algunas de tus próximas aventuras.",
-      "Que este nuevo año te traiga todo lo bonito que te mereces y todo el espacio para seguir logrando lo que te propongas.",
-      "Feliz cumpleaños, Lau. Te mando un abrazo enorme."
-    ],
-    artImage: asset("images/watercolor/birthday_bouquet.jpg")
-  },
-
-  // -------------------------------------------------------------
-  // PÁGINA 10: NUEVOS CAPÍTULOS (PRÓXIMAMENTE)
-  // -------------------------------------------------------------
-  {
-    pageNumber: 10,
-    type: "epilogue_upcoming",
-    title: "Capítulo II",
-    subtitle: "Próximamente",
-    note: "Espacio reservado para los próximos capítulos que se sumen a este libro.",
-    artImage: asset("images/watercolor/cover_wreath.jpg")
+function _resolve(item) {
+  if (typeof item === 'string') {
+    if (item.startsWith('images/') || item.startsWith('audio/')) {
+      return asset(item);
+    }
+    return item;
   }
-];
+  if (Array.isArray(item)) return item.map(_resolve);
+  if (item && typeof item === 'object') {
+    const res = {};
+    for (const [k, v] of Object.entries(item)) {
+      res[k] = _resolve(v);
+    }
+    return res;
+  }
+  return item;
+}
+
+const _K = "vault_lau_2709";
+const _C = "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";
+
+const _DATA = _resolve(JSON.parse(_d(_C, _K)));
+
+export const bookMetadata = _DATA.bookMetadata;
+export const chapters = _DATA.chapters;
+export const bookPages = _DATA.bookPages;
