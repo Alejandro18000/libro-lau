@@ -14,6 +14,10 @@ import { Lightbox } from './components/Lightbox.js';
 import { ChaptersModal } from './components/ChaptersModal.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (bookMetadata.title) {
+    document.title = `${bookMetadata.title} · ${bookMetadata.subtitle}`;
+  }
+
   // 1. Inicializar auxiliares
   const petals = new PetalsEffect('petals-canvas');
   const audioController = new AudioController(bookMetadata.songDetails);

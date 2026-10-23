@@ -1,9 +1,8 @@
 @echo off
 chcp 65001 > nul
-title Libro Interactivo - Nuestra Historia
+title Libro Interactivo
 echo ==============================================================
-echo   📖 Iniciando el Libro Interactivo: Nuestra Historia
-echo   🌸 Edición Especial para Lau
+echo   📖 Iniciando el Libro Interactivo
 echo ==============================================================
 echo.
 echo Abriendo el libro en tu navegador...

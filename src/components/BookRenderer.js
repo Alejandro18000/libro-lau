@@ -65,9 +65,9 @@ export class BookRenderer {
       
       <div class="cover-medallion-content back">
         <div class="cover-gold-badge">
-          <div class="cover-gold-title" style="font-size: 1.85rem;">Para Lau</div>
+          <div class="cover-gold-title" style="font-size: 1.85rem;">${bookMetadata.title}</div>
           <div class="cover-gold-divider"></div>
-          <div class="cover-gold-subtitle">27 de Septiembre</div>
+          <div class="cover-gold-subtitle">${bookMetadata.subtitle}</div>
         </div>
       </div>
     `;
@@ -152,7 +152,7 @@ export class BookRenderer {
               </svg>
             </div>
             <h2 class="letter-title toc-main-heading">Contenido</h2>
-            <div class="toc-subheading">Memorias & Palabras para Lau</div>
+            <div class="toc-subheading">Memorias & Palabras</div>
           </div>
 
           <div class="toc-editorial-list toc-container">
@@ -168,9 +168,9 @@ export class BookRenderer {
             </div>
             <p class="toc-vignette-quote">
               «Hay historias que merecen guardarse en páginas,<br>
-              y personas que merecen un libro entero.»
+              y momentos que merecen un libro entero.»
             </p>
-            <span class="toc-vignette-signature">— Para Lau</span>
+            <span class="toc-vignette-signature">✦</span>
           </div>
         </div>
 
@@ -212,7 +212,7 @@ export class BookRenderer {
     return `
       <div class="page-content-wrapper">
         <div class="page-header-minimal">
-          <span class="page-header-title">27 de Septiembre</span>
+          <span class="page-header-title">${bookMetadata.subtitle || ''}</span>
         </div>
         <div class="page-body-content">
           ${data.header ? `<h2 class="letter-title">${data.header}</h2>` : ''}
@@ -236,7 +236,7 @@ export class BookRenderer {
     return `
       <div class="page-content-wrapper">
         <div class="page-header-minimal">
-          <span class="page-header-title">27 de Septiembre</span>
+          <span class="page-header-title">${bookMetadata.subtitle || ''}</span>
         </div>
         <div class="page-body-content">
           <div class="clean-photo-frame single-photo" data-full-img="${data.photo.src}" data-caption="${data.photo.caption}">
@@ -262,7 +262,7 @@ export class BookRenderer {
     return `
       <div class="page-content-wrapper">
         <div class="page-header-minimal">
-          <span class="page-header-title">27 de Septiembre</span>
+          <span class="page-header-title">${bookMetadata.subtitle || ''}</span>
         </div>
         <div class="page-body-content">
           <div class="scrapbook-photos-row">
@@ -294,21 +294,21 @@ export class BookRenderer {
     return `
       <div class="page-content-wrapper">
         <div class="page-header-minimal">
-          <span class="page-header-title">invisible string</span>
+          <span class="page-header-title">${song.title}</span>
         </div>
         <div class="page-body-content">
           ${data.paragraphs.map(p => `<p class="letter-paragraph">${p}</p>`).join('')}
 
           <!-- Ilustración en Acuarela del Hilo Dorado y Notas Musicales -->
-          <img class="watercolor-spot-art wide music-thread-art" src="${data.artImage}" alt="Hilo dorado en acuarela" />
+          <img class="watercolor-spot-art wide music-thread-art" src="${data.artImage}" alt="Música" />
 
           <!-- Reproductor de la canción completa -->
           <div class="music-card-watercolor">
             <div class="music-player-row">
               <img class="album-cover-thumb" src="${song.coverImg}" alt="${song.title}" />
               <div class="song-info">
-                <div class="song-title">invisible string</div>
-                <div class="song-artist">Taylor Swift · <em>folklore</em></div>
+                <div class="song-title">${song.title}</div>
+                <div class="song-artist">${song.artist} ${song.album ? `· <em>${song.album}</em>` : ''}</div>
               </div>
             </div>
 
@@ -351,7 +351,7 @@ export class BookRenderer {
     return `
       <div class="page-content-wrapper">
         <div class="page-header-minimal">
-          <span class="page-header-title">27 de Septiembre</span>
+          <span class="page-header-title">${bookMetadata.subtitle || ''}</span>
         </div>
         <div class="page-body-content">
           <div class="clean-photo-frame closing-frame" data-full-img="${data.photo.src}" data-caption="${data.photo.caption}">
@@ -362,7 +362,7 @@ export class BookRenderer {
             ${paragraphsHtml}
           </div>
           ${data.artImage ? `
-            <img class="watercolor-spot-art closing-bouquet-art" src="${data.artImage}" alt="Ramo de cumpleaños en acuarela" />
+            <img class="watercolor-spot-art closing-bouquet-art" src="${data.artImage}" alt="Ilustración floral" />
           ` : ''}
         </div>
         <div class="page-footer-num">

@@ -15,10 +15,7 @@ export class ChaptersModal {
         <div style="position: absolute; top: 16px; right: 20px; font-size: 1.8rem; color: #6b5e67; cursor: pointer;" id="modal-toc-close">
           &times;
         </div>
-        <h3 class="chapters-modal-title" style="margin-bottom: 6px;">Índice</h3>
-        <p style="font-family: var(--font-serif); font-size: 1rem; color: var(--text-muted); text-align: center; margin-bottom: 20px;">
-          Para Lau
-        </p>
+        <h3 class="chapters-modal-title" style="margin-bottom: 20px;">Índice</h3>
         <div id="modal-chapters-list"></div>
       </div>
     `;
